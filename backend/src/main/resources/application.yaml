@@ -1,7 +1,4 @@
 spring:
-  webflux:
-    # add the prefix to the path as the backend and the AI service are going to use the same port
-    base-path: /backend
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://simons-gpt-server.mysql.database.azure.com

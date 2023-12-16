@@ -79,19 +79,17 @@ public class OpenAIClient {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + openAiKey)
                 .header(OPENAI_BETA, ASSISTANT_V1)
                 .bodyValue(chatRequest)
-                .exchangeToMono(clientResponse -> clientResponse.bodyToMono(String.class)
-                        .doOnError(e -> {
-                            log.error("Error calling OpenAI to chat", e);
-                            throw new RuntimeException(e);
-                        })
-                        .doOnSuccess(res -> log.info("call chat response: {}", res)))
-                .flatMap(res -> {
-                    try {
-                        ChatResponse chatResponse = objectMapper.readValue(res, ChatResponse.class);
-                        return Mono.just(chatResponse.getChoices().get(0).getMessage().getContent());
-                    } catch (JsonProcessingException e) {
-                        return Mono.error(new RuntimeException(e));
-                    }
+                .retrieve()
+                .onStatus(httpStatus -> !httpStatus.is2xxSuccessful(), clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    log.error("OpenAI call failed with status: {}, error body: {}", clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new RuntimeException("OpenAI call failed with status: " + clientResponse.statusCode()));
+                                }))
+                .bodyToMono(ChatResponse.class)
+                .flatMap(chatResponse -> {
+                    log.info("OpenAI call succeeded with response: {}", chatResponse);
+                    return Mono.just(chatResponse.getChoices().get(0).getMessage().getContent());
                 });
     }
 }
