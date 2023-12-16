@@ -7,8 +7,6 @@ env:
   AZURE_WEBAPP_NAME: simons-gpt       # set this to the name of your Azure Web App
   JAVA_VERSION: '17'                  # set this to the Java version to use
   DISTRIBUTION: temurin               # set this to the Java distribution
-  AZURE_WEBAPP_PACKAGE_PATH: 'web'      # set this to the path to your web app project, defaults to the repository root
-  NODE_VERSION: '18'                # set this to the node version to use
   ACTIONS_RUNNER_DEBUG: 'true'
   ACTIONS_STEP_DEBUG: 'true'
 
@@ -19,33 +17,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-frontend:
-    defaults:
-      run:
-        working-directory: web
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
-
-      - name: npm install, build
-        run: |
-          npm install
-          npm run build --if-present
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.AZURE_WEBAPP_NAME }}
-          path: '${{ github.workspace }}/web/build'
-
   build-backend:
     runs-on: ubuntu-latest
 
@@ -75,7 +46,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs:
-      - build-frontend
       - build-backend
     environment:
       name: 'Production'
@@ -94,4 +64,4 @@ jobs:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1E13B8C7FD794A608E750E1117B3DD51 }}
-          package: '*'
+          package: '*.jar'
