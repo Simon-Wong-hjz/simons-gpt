@@ -1,0 +1,52 @@
+spring:
+  webflux:
+    # add the prefix to the path as the backend and the AI service are going to use the same port
+    base-path: /backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://simons-gpt-server.mysql.database.azure.com
+    username: ${AZURE_MYSQL_USERNAME}
+    password: ${AZURE_MYSQL_PASSWORD}
+    hikari:
+      connection-timeout: 60000
+      validation-timeout: 3000
+      idle-timeout: 60000
+      login-timeout: 5
+      max-lifetime: 60000
+      maximum-pool-size: 10
+      minimum-idle: 10
+      read-only: false
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    default-property-inclusion: non_null
+
+logging:
+  file:
+    path: logs
+
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "shutdown,health,info,metrics,loggers,threaddump,heapdump"
+
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: delFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      # print sql in console, for local debug
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+openai:
+  endpoint: "https://api.openai.com/v1"
+  # set the key from Azure Web Apps configuration
+  key: ${OPENAI_KEY}
+  retry: 3
