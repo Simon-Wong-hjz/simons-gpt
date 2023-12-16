@@ -1,7 +1,7 @@
 package com.simwong.simonsgpt.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.simhuang.simonsgpt.model.Assistant;
+import com.simwong.simonsgpt.model.Assistant;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

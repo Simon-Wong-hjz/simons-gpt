@@ -168,8 +168,8 @@
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
                             <generatorName>spring</generatorName>
-                            <apiPackage>com.simhuang.simonsgpt.api</apiPackage>
-                            <modelPackage>com.simhuang.simonsgpt.model</modelPackage>
+                            <apiPackage>com.simwong.simonsgpt.api</apiPackage>
+                            <modelPackage>com.simwong.simonsgpt.model</modelPackage>
                             <!--                            <templateDirectory>${project.basedir}/src/main/resources/templates</templateDirectory>-->
                             <configOptions>
                                 <sourceFolder>src/main/java</sourceFolder>
