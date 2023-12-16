@@ -17,7 +17,7 @@ function App() {
         if (inputMessage.trim()) {
             setIsLoading(true); // Start loading
             try {
-                const response = await axios.post('http://localhost:8080/chat', { message: inputMessage });
+                const response = await axios.post('https://simons-gpt.azurewebsites.net/chat', { message: inputMessage });
                 setMessages([...messages, response.data.message]);
                 setInputMessage(''); // Clear the input field
             } catch (error) {
