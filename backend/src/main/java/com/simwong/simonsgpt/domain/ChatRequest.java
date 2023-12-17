@@ -13,6 +13,8 @@ public class ChatRequest {
     private String model;
     @JsonProperty("messages")
     private List<Messages> messages;
+    @JsonProperty("stream")
+    private Boolean stream;
 
     @Builder
     @Data

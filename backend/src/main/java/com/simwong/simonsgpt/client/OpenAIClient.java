@@ -8,8 +8,12 @@ import com.simwong.simonsgpt.domain.ChatResponse;
 import com.simwong.simonsgpt.model.Assistant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -59,7 +63,7 @@ public class OpenAIClient {
                 });
     }
 
-    public Mono<String> chat(String message) {
+    public Flux<String> chat(String message) {
         ChatRequest chatRequest = ChatRequest.builder()
                 .model("gpt-4-1106-preview")
                 .messages(
@@ -71,13 +75,16 @@ public class OpenAIClient {
                                         .role("user")
                                         .content(message)
                                         .build()))
+                .stream(true)
                 .build();
 
         log.info("Calling OpenAI to chat: {}", message);
+        ParameterizedTypeReference<ServerSentEvent<String>> type = new ParameterizedTypeReference<>() {};
         return webClient.post()
                 .uri(openAiEndpoint + "/chat/completions")
+                .accept(MediaType.TEXT_EVENT_STREAM)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + openAiKey)
-                .header(OPENAI_BETA, ASSISTANT_V1)
+//                .header(OPENAI_BETA, ASSISTANT_V1)
                 .bodyValue(chatRequest)
                 .retrieve()
                 .onStatus(httpStatus -> !httpStatus.is2xxSuccessful(), clientResponse ->
@@ -86,10 +93,32 @@ public class OpenAIClient {
                                     log.error("OpenAI call failed with status: {}, error body: {}", clientResponse.statusCode(), errorBody);
                                     return Mono.error(new RuntimeException("OpenAI call failed with status: " + clientResponse.statusCode()));
                                 }))
-                .bodyToMono(ChatResponse.class)
-                .flatMap(chatResponse -> {
-                    log.info("OpenAI call succeeded with response: {}", chatResponse);
-                    return Mono.just(chatResponse.getChoices().get(0).getMessage().getContent());
-                });
+                .bodyToFlux(type)
+                .flatMap(serverSentEvent -> {
+                    String data = serverSentEvent.data();
+                    try {
+                        ChatResponse chatResponse = objectMapper.readValue(data, ChatResponse.class);
+                        if (chatResponse.getChoices() != null && !chatResponse.getChoices().isEmpty()) {
+                            // Handle regular ChatResponse
+                            if (chatResponse.getChoices().get(0).getDelta() != null) {
+
+                                log.info("OpenAI call succeeded with response: {}", chatResponse);
+                                String content = chatResponse.getChoices().get(0).getDelta().getContent();
+                                return Mono.justOrEmpty(content);
+                            } else if (StringUtils.isNotEmpty(chatResponse.getChoices().get(0).getFinishReason())) {
+                                log.info("OpenAI call finished with reason: {}", chatResponse.getChoices().get(0).getFinishReason());
+                                return Mono.empty();
+                            } else {
+                                log.info("Unknown response from OpenAI: {}", chatResponse);
+                                return Mono.empty();
+                            }
+                        }
+                    } catch (JsonProcessingException e) {
+                        log.error("OpenAI didn't return valid response: {}", data);
+                        return Mono.empty();
+                    }
+                    return Mono.empty();
+                })
+                .doOnError(e -> log.error("Error calling OpenAI to chat", e));
     }
 }

@@ -3,6 +3,9 @@ import axios from 'axios';
 import './App.css';
 
 function App() {
+    // let API_URL = 'https://simons-gpt.azurewebsites.net';
+    let API_URL = 'http://localhost:8080';
+
     const [inputMessage, setInputMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -13,26 +16,70 @@ function App() {
         setInputMessage(event.target.value);
     };
 
-    const sendMessage = async () => {
+    const sendMessage = () => {
         if (inputMessage.trim()) {
             setIsLoading(true); // Start loading
-            try {
-                const response = await axios.post('https://simons-gpt.azurewebsites.net/chat', { message: inputMessage });
-                setMessages([...messages, response.data.message]);
-                setInputMessage(''); // Clear the input field
-            } catch (error) {
-                console.error(error)
-                let errorMessage = error.message;
-                if (error.response && error.response.data) {
-                    errorMessage = error.response.data;
-                }
-                setErrorMessage('Error sending message: ' + errorMessage);
-                setShowError(true);
-                setTimeout(() => {
-                    setShowError(false);
-                }, 3000); // Error message will disappear after 3 seconds
-            }
-            setIsLoading(false); // Stop loading regardless of the outcome
+            setErrorMessage('');
+            setShowError(false);
+
+            // Use the Fetch API to make a POST request
+            fetch(API_URL + '/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: inputMessage }),
+            })
+                .then(response => {
+                    // The ReadableStream is in the response.body
+                    const reader = response.body.getReader();
+                    return new ReadableStream({
+                        start(controller) {
+                            function push() {
+                                const decoder = new TextDecoder();
+                                reader.read().then(({ done, value }) => {
+                                    if (done) {
+                                        // Finish the streaming and close the reader
+                                        controller.close();
+                                        setIsLoading(false); // Stop loading when done
+                                        return;
+                                    }
+                                    // Decode the stream while handling multi-byte characters
+                                    const text = decoder.decode(value, { stream: true })
+                                        .replaceAll('data:', '')
+                                        .replaceAll('\n', '');
+                                    // Append the text to the current message instead of adding it as a new message
+                                    setMessages(messages => {
+                                        // If there are no messages, just add the text
+                                        if (messages.length === 0) {
+                                            return [text];
+                                        } else {
+                                            // Otherwise, append the text to the last message
+                                            return [...messages.slice(0, -1), messages[messages.length - 1] + text];
+                                        }
+                                    });
+                                    controller.enqueue(value);
+                                    push();
+                                }).catch(error => {
+                                    console.error(error);
+                                    setIsLoading(false);
+                                    setErrorMessage('Error receiving message: ' + error.message);
+                                    setShowError(true);
+                                });
+                            }
+                            push();
+
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                    setIsLoading(false);
+                    setErrorMessage('Error sending message: ' + error.message);
+                    setShowError(true);
+                });
+
+            setInputMessage(''); // Clear the input field
         }
     };
 

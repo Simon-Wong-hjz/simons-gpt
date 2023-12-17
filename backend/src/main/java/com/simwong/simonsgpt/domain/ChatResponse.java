@@ -1,5 +1,6 @@
 package com.simwong.simonsgpt.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +41,8 @@ public class ChatResponse {
     public static class Choices {
         @JsonProperty("index")
         private Integer index;
+        @JsonProperty("delta")
+        private Delta delta;
         @JsonProperty("message")
         private Message message;
         @JsonProperty("logprobs")
@@ -54,6 +57,18 @@ public class ChatResponse {
             private String role;
             @JsonProperty("content")
             private String content;
+        }
+
+        @Builder
+        @Data
+        public static class Delta {
+
+            private String content;
+
+            @JsonCreator
+            public Delta(@JsonProperty("content") String content) {
+                this.content = content;
+            }
         }
     }
 }

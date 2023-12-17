@@ -4,6 +4,7 @@ import com.simwong.simonsgpt.client.OpenAIClient;
 import com.simwong.simonsgpt.model.ChatPostRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -11,11 +12,8 @@ import reactor.core.publisher.Mono;
 public class ChatService {
     private final OpenAIClient openAIClient;
 
-    public Mono<ChatPostRequest> chat(Mono<ChatPostRequest> chatPostRequestMono) {
-        return chatPostRequestMono.flatMap(chatPostRequest ->
-                openAIClient.chat(chatPostRequest.getMessage())
-                        .map(chatResponse -> ChatPostRequest.builder()
-                                .message(chatResponse)
-                                .build()));
+    public Flux<String> chat(Mono<ChatPostRequest> chatPostRequestMono) {
+        return chatPostRequestMono.flatMapMany(chatPostRequest ->
+                openAIClient.chat(chatPostRequest.getMessage()));
     }
 }
