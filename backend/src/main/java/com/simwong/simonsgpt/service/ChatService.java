@@ -1,7 +1,7 @@
 package com.simwong.simonsgpt.service;
 
 import com.simwong.simonsgpt.client.OpenAIClient;
-import com.simwong.simonsgpt.model.ChatPostRequest;
+import com.simwong.simonsgpt.domain.ChatPostRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

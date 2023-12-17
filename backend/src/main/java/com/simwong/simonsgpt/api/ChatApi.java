@@ -5,7 +5,7 @@
  */
 package com.simwong.simonsgpt.api;
 
-import com.simwong.simonsgpt.model.ChatPostRequest;
+import com.simwong.simonsgpt.domain.ChatPostRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

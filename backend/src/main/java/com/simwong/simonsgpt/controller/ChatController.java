@@ -1,7 +1,7 @@
 package com.simwong.simonsgpt.controller;
 
 import com.simwong.simonsgpt.api.ChatApi;
-import com.simwong.simonsgpt.model.ChatPostRequest;
+import com.simwong.simonsgpt.domain.ChatPostRequest;
 import com.simwong.simonsgpt.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
