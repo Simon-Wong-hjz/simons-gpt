@@ -3,8 +3,8 @@ import axios from 'axios';
 import './App.css';
 
 function App() {
-    // let API_URL = 'https://simons-gpt.azurewebsites.net';
-    let API_URL = 'http://localhost:8080';
+    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    // let API_URL = 'http://localhost:8080';
 
     const [inputMessage, setInputMessage] = useState('');
     const [messages, setMessages] = useState([]);
