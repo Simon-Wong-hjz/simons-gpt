@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
@@ -7,7 +6,7 @@ function App() {
     // let API_URL = 'http://localhost:8080';
 
     const [inputMessage, setInputMessage] = useState('');
-    const [messages, setMessages] = useState([]);
+    const [conversation, setConversation] = useState([]); // Track entire conversation
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showError, setShowError] = useState(false);
@@ -22,15 +21,37 @@ function App() {
             setErrorMessage('');
             setShowError(false);
 
+            // Add the user message to the conversation
+            setConversation(prevState => [...prevState, { role: 'user', content: inputMessage }]);
+            setInputMessage(''); // Clear the input field
+        }
+    };
+
+    // Render messages with different alignment based on sender
+    const renderMessages = () => {
+        return conversation.map((msg, index) => (
+            <div
+                key={index}
+                className={`message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}>
+                {msg.content}
+            </div>
+        ));
+    };
+
+    useEffect(() => {
+        if (conversation.length > 0 && conversation[conversation.length - 1].role === 'user') {
             // Use the Fetch API to make a POST request
             fetch(API_URL + '/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: inputMessage }),
+                body: JSON.stringify(conversation),
             })
                 .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Response not OK: ' + response.status);
+                    }
                     // The ReadableStream is in the response.body
                     const reader = response.body.getReader();
                     return new ReadableStream({
@@ -48,14 +69,14 @@ function App() {
                                     const text = decoder.decode(value, { stream: true })
                                         .replaceAll('data:', '')
                                         .replaceAll('\n', '');
-                                    // Append the text to the current message instead of adding it as a new message
-                                    setMessages(messages => {
-                                        // If there are no messages, just add the text
-                                        if (messages.length === 0) {
-                                            return [text];
+                                    // Add streamed assistant message to conversation
+                                    setConversation(conversation => {
+                                        // Append the text to the last assistant message if it exists and is the last one
+                                        if (conversation.length && conversation[conversation.length - 1].role === 'assistant') {
+                                            return [...conversation.slice(0, -1), { ...conversation[conversation.length - 1], content: conversation[conversation.length - 1].content + text }];
                                         } else {
-                                            // Otherwise, append the text to the last message
-                                            return [...messages.slice(0, -1), messages[messages.length - 1] + text];
+                                            // Otherwise, add a new assistant message
+                                            return [...conversation, { role: 'assistant', content: text }];
                                         }
                                     });
                                     controller.enqueue(value);
@@ -78,10 +99,8 @@ function App() {
                     setErrorMessage('Error sending message: ' + error.message);
                     setShowError(true);
                 });
-
-            setInputMessage(''); // Clear the input field
         }
-    };
+    }, [conversation]);
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
@@ -99,12 +118,8 @@ function App() {
             <div className="chat-container">
                 {isLoading && <div className="loading-spinner"></div>}
                 <div className="chat-window">
-                    <div className="messages">
-                        {messages.map((msg, index) => (
-                            <div key={index} className="message">
-                                {msg}
-                            </div>
-                        ))}
+                    <div className="conversation-view">
+                        {renderMessages()}
                     </div>
                     <div className="chat-input">
                         <input

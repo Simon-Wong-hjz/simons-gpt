@@ -6,6 +6,7 @@ import com.simwong.simonsgpt.domain.AssistantsResponse;
 import com.simwong.simonsgpt.domain.ChatRequest;
 import com.simwong.simonsgpt.domain.ChatResponse;
 import com.simwong.simonsgpt.model.Assistant;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -63,23 +65,27 @@ public class OpenAIClient {
                 });
     }
 
-    public Flux<String> chat(String message) {
+    public Flux<String> chat(List<ChatMessage> chatMessages) {
+        ArrayList<ChatRequest.Messages> messages = new ArrayList<>();
+        messages.add(ChatRequest.Messages.builder()
+                .role("system")
+                .content("你是一个助手。你可以结合自身的知识与用户的需求解答用户的问题。除非用户要求你使用中文以外的语言，否则你只使用中文回答问题。")
+                .build());
         ChatRequest chatRequest = ChatRequest.builder()
                 .model("gpt-4-1106-preview")
-                .messages(
-                        List.of(ChatRequest.Messages.builder()
-                                        .role("system")
-                                        .content("你是一个助手。你可以结合自身的知识与用户的需求解答用户的问题。除非用户要求你使用中文以外的语言，否则你只使用中文回答问题。")
-                                        .build()
-                                , ChatRequest.Messages.builder()
-                                        .role("user")
-                                        .content(message)
-                                        .build()))
                 .stream(true)
                 .build();
 
-        log.info("Calling OpenAI to chat: {}", message);
-        ParameterizedTypeReference<ServerSentEvent<String>> type = new ParameterizedTypeReference<>() {};
+        chatMessages.forEach(chatMessage -> {
+            messages.add(ChatRequest.Messages.builder()
+                    .role(chatMessage.getRole())
+                    .content(chatMessage.getContent())
+                    .build());
+        });
+        chatRequest.setMessages(messages);
+        log.info("Calling OpenAI to chat: {}", chatRequest);
+        ParameterizedTypeReference<ServerSentEvent<String>> type = new ParameterizedTypeReference<>() {
+        };
         return webClient.post()
                 .uri(openAiEndpoint + "/chat/completions")
                 .accept(MediaType.TEXT_EVENT_STREAM)

@@ -26,11 +26,13 @@
   height: 100%;
 }
 
-.messages {
+.conversation-view {
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
   background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
@@ -75,16 +77,16 @@
 }
 
 /* Scrollbar Styles */
-.messages::-webkit-scrollbar {
+.conversation-view::-webkit-scrollbar {
   width: 8px;
 }
 
-.messages::-webkit-scrollbar-thumb {
+.conversation-view::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 4px;
 }
 
-.messages::-webkit-scrollbar-thumb:hover {
+.conversation-view::-webkit-scrollbar-thumb:hover {
   background: #bbb;
 }
 
@@ -148,4 +150,23 @@
     100% { transform: rotate(360deg); }
   }
 
+  .message {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 20px;
+    display: inline-block;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+
+  .user-message {
+    align-self: flex-end;
+    background-color: #dcf8c6; /* Different background for user messages */
+  }
+
+  .bot-message {
+    align-self: flex-start;
+    background-color: #f1f0f0; /* Different background for bot messages */
+  }
 }

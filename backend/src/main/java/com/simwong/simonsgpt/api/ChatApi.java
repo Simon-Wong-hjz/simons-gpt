@@ -5,7 +5,7 @@
  */
 package com.simwong.simonsgpt.api;
 
-import com.simwong.simonsgpt.domain.ChatPostRequest;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,6 +23,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-12-17T18:07:25.043645300+08:00[Asia/Shanghai]")
 @Validated
 @Tag(name = "chat", description = "Chat with default model")
@@ -31,7 +33,7 @@ public interface ChatApi {
     /**
      * POST /chat : Send a message to the default model
      *
-     * @param chatPostRequest  (required)
+     * @param chatMessages  (required)
      * @return Stream of chat responses (status code 200)
      *         or Bad request (status code 400)
      */
@@ -54,17 +56,17 @@ public interface ChatApi {
     )
     
     default Flux<String> _chatPost(
-        @Parameter(name = "ChatPostRequest", description = "", required = true) @Valid @RequestBody Mono<ChatPostRequest> chatPostRequest,
+        @Parameter(name = "chatMessages", description = "", required = true) @Valid @RequestBody Mono<List<ChatMessage>> chatMessages,
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
-        return chatPost(chatPostRequest, exchange);
+        return chatPost(chatMessages, exchange);
     }
 
     // Override this method
-    default  Flux<String> chatPost(Mono<ChatPostRequest> chatPostRequest,  final ServerWebExchange exchange) {
+    default  Flux<String> chatPost(Mono<List<ChatMessage>> chatMessages,  final ServerWebExchange exchange) {
         Flux<Void> result = Flux.empty();
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
-        return result.then(chatPostRequest).flatMapMany(
+        return result.then(chatMessages).flatMapMany(
             request -> Flux.error(new UnsupportedOperationException("Not implemented"))
         );
 
