@@ -11,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatCompletionService {
     private final OpenAIClient openAIClient;
 
     public Flux<String> chat(Mono<List<ChatMessage>> chatPostRequestMono) {

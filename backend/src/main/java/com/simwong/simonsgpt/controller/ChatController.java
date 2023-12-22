@@ -1,7 +1,7 @@
 package com.simwong.simonsgpt.controller;
 
 import com.simwong.simonsgpt.api.ChatApi;
-import com.simwong.simonsgpt.service.ChatService;
+import com.simwong.simonsgpt.service.ChatCompletionService;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,10 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatController implements ChatApi {
 
-    private final ChatService chatService;
+    private final ChatCompletionService chatCompletionService;
 
     @Override
     public Flux<String> chatPost(Mono<List<ChatMessage>> chatMessages, ServerWebExchange exchange) {
-        return chatService.chat(chatMessages);
+        return chatCompletionService.chat(chatMessages);
     }
 }

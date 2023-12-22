@@ -61,10 +61,16 @@
             <version>0.2.1</version>
         </dependency>
 
+        <!-- openai sdk -->
         <dependency>
             <groupId>com.theokanning.openai-gpt3-java</groupId>
             <artifactId>service</artifactId>
             <version>0.18.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.reactiveclown</groupId>
+            <artifactId>openai-webflux-client-spring-boot-starter</artifactId>
+            <version>0.9.2-SNAPSHOT</version>
         </dependency>
 
         <!-- mysql -->
