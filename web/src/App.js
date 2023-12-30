@@ -2,8 +2,6 @@ import React, {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
-    let API_URL = 'https://simons-gpt.azurewebsites.net';
-    // let API_URL = 'http://localhost:8080';
 
     const [inputMessage, setInputMessage] = useState('');
     const [conversation, setConversation] = useState([]); // Track entire conversation
@@ -39,6 +37,8 @@ function App() {
     };
 
     useEffect(() => {
+        let API_URL = 'https://simons-gpt.azurewebsites.net';
+        // let API_URL = 'http://localhost:8080';
         if (conversation.length > 0 && conversation[conversation.length - 1].role === 'user') {
             // Use the Fetch API to make a POST request
             fetch(API_URL + '/chat', {
