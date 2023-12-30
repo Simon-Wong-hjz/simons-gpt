@@ -37,7 +37,7 @@ function App() {
             <div
                 key={index}
                 className={`message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}>
-                {msg.content}
+                {msg.content.replaceAll(/\n\n(?!\n)/g, '')}
             </div>
         ));
     };
@@ -80,8 +80,7 @@ function App() {
                                     }
                                     // Decode the stream while handling multibyte characters
                                     const text = decoder.decode(value, { stream: true })
-                                        .replaceAll('data:', '')
-                                        .replaceAll('\n', '');
+                                        .replaceAll('data:', '');
                                     // Add streamed assistant message to conversation
                                     setConversation(conversation => {
                                         // Append the text to the last assistant message if it exists and is the last one
