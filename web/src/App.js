@@ -10,6 +10,9 @@ function App() {
     const [showError, setShowError] = useState(false);
     const [abortController, setAbortController] = useState(null);
 
+    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    // let API_URL = 'http://localhost:8080';
+
     const handleInputChange = (event) => {
         setInputMessage(event.target.value);
     };
@@ -48,8 +51,6 @@ function App() {
     }
 
     useEffect(() => {
-        // let API_URL = 'https://simons-gpt.azurewebsites.net';
-        let API_URL = 'http://localhost:8080';
         if (conversation.length > 0 && conversation[conversation.length - 1].role === 'user') {
             // Use the Fetch API to make a POST request
             fetch(API_URL + '/chat', {
@@ -119,6 +120,7 @@ function App() {
                     setIsLoading(false);
                 });
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [conversation]);
 
     const handleKeyPress = (event) => {
