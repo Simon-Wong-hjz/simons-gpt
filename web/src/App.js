@@ -8,6 +8,7 @@ function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showError, setShowError] = useState(false);
+    const [abortController, setAbortController] = useState(null);
 
     const handleInputChange = (event) => {
         setInputMessage(event.target.value);
@@ -15,6 +16,8 @@ function App() {
 
     const sendMessage = () => {
         if (inputMessage.trim()) {
+            const controller = new AbortController();
+            setAbortController(controller);
             setIsLoading(true); // Start loading
             setErrorMessage('');
             setShowError(false);
@@ -36,9 +39,17 @@ function App() {
         ));
     };
 
+    const interruptProcess = () => {
+        if (abortController) {
+            abortController.abort();
+            setAbortController(null);
+        }
+        setIsLoading(false);
+    }
+
     useEffect(() => {
-        let API_URL = 'https://simons-gpt.azurewebsites.net';
-        // let API_URL = 'http://localhost:8080';
+        // let API_URL = 'https://simons-gpt.azurewebsites.net';
+        let API_URL = 'http://localhost:8080';
         if (conversation.length > 0 && conversation[conversation.length - 1].role === 'user') {
             // Use the Fetch API to make a POST request
             fetch(API_URL + '/chat', {
@@ -47,6 +58,7 @@ function App() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(conversation),
+                signal: abortController.signal,
             })
                 .then(response => {
                     if (!response.ok) {
@@ -65,7 +77,7 @@ function App() {
                                         setIsLoading(false); // Stop loading when done
                                         return;
                                     }
-                                    // Decode the stream while handling multi-byte characters
+                                    // Decode the stream while handling multibyte characters
                                     const text = decoder.decode(value, { stream: true })
                                         .replaceAll('data:', '')
                                         .replaceAll('\n', '');
@@ -82,22 +94,29 @@ function App() {
                                     controller.enqueue(value);
                                     push();
                                 }).catch(error => {
-                                    console.error(error);
+                                    if (error.name === 'AbortError') {
+                                        console.log('Fetch aborted');
+                                    } else {
+                                        console.error(error);
+                                        setErrorMessage('Error receiving message: ' + error.message);
+                                        setShowError(true);
+                                    }
                                     setIsLoading(false);
-                                    setErrorMessage('Error receiving message: ' + error.message);
-                                    setShowError(true);
                                 });
                             }
                             push();
-
                         }
                     });
                 })
                 .catch(error => {
-                    console.error(error);
+                    if (error.name === 'AbortError') {
+                        console.log('Fetch aborted');
+                    } else {
+                        console.error(error);
+                        setErrorMessage('Error sending message: ' + error.message);
+                        setShowError(true);
+                    }
                     setIsLoading(false);
-                    setErrorMessage('Error sending message: ' + error.message);
-                    setShowError(true);
                 });
         }
     }, [conversation]);
@@ -129,7 +148,11 @@ function App() {
                             onChange={handleInputChange}
                             onKeyPress={handleKeyPress}
                         />
-                        <button onClick={sendMessage}>发送</button>
+                        {isLoading ? (
+                            <button onClick={interruptProcess}>停止生成</button>
+                        ) : (
+                            <button onClick={sendMessage}>发送</button>
+                        )}
                     </div>
                 </div>
             </div>
