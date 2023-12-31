@@ -1,8 +1,8 @@
 package com.simwong.simonsgpt.controller;
 
 import com.simwong.simonsgpt.api.AssistantsApi;
-import com.simwong.simonsgpt.model.Assistant;
 import com.simwong.simonsgpt.service.AssistantService;
+import com.theokanning.openai.assistants.Assistant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

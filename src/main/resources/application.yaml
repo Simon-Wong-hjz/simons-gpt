@@ -1,9 +1,9 @@
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://simons-gpt-server.mysql.database.azure.com
-    username: ${AZURE_MYSQL_USERNAME}
-    password: ${AZURE_MYSQL_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://simons-gpt.database.windows.net:1433;database=simons-gpt;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    username: ${AZURE_SQL_USERNAME}
+    password: ${AZURE_SQL_PASSWORD}
     hikari:
       connection-timeout: 60000
       validation-timeout: 3000
