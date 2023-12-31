@@ -75,21 +75,6 @@ paths:
         '401':
           description: Unauthorized
 
-  /assistants:
-    get:
-      summary: List all assistants
-      tags:
-        - assistants
-      responses:
-        '200':
-          description: A list of assistants
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Assistant'
-
   /threads:
     post:
       summary: Create a new chat thread with a specific assistant
