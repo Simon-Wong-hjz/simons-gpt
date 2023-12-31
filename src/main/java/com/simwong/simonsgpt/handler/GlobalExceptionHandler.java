@@ -15,6 +15,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public ResponseEntity<String> handleException(Exception ex) {
+        log.error("Exception caught", ex);
         return ResponseEntity.internalServerError().body(ex.getMessage());
     }
 }

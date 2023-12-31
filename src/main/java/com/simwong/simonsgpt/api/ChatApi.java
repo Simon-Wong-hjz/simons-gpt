@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,46 +27,47 @@ import java.util.List;
 
 @Validated
 @Tag(name = "chat", description = "Chat with default model")
+@SecurityRequirement(name = "bearerAuth")
 public interface ChatApi {
 
     /**
      * POST /chat : Send a message to the default model
      *
-     * @param chatMessages  (required)
+     * @param chatMessages (required)
      * @return Stream of chat responses (status code 200)
-     *         or Bad request (status code 400)
+     * or Bad request (status code 400)
      */
     @Operation(
-        operationId = "chatPost",
-        summary = "Send a message to the default model",
-        tags = { "chat" },
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Stream of chat responses", content = {
-                @Content(mediaType = "text/event-stream", schema = @Schema(implementation = String.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Bad request")
-        }
+            operationId = "chatPost",
+            summary = "Send a message to the default model",
+            tags = {"chat"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Stream of chat responses", content = {
+                            @Content(mediaType = "text/event-stream", schema = @Schema(implementation = String.class))
+                    }),
+                    @ApiResponse(responseCode = "400", description = "Bad request")
+            }
     )
     @RequestMapping(
-        method = RequestMethod.POST,
-        value = "/chat",
-        produces = { "text/event-stream" },
-        consumes = { "application/json" }
+            method = RequestMethod.POST,
+            value = "/chat",
+            produces = {"text/event-stream"},
+            consumes = {"application/json"}
     )
-    
+
     default Flux<String> _chatPost(
-        @Parameter(name = "chatMessages", description = "", required = true) @Valid @RequestBody Mono<List<ChatMessage>> chatMessages,
-        @Parameter(hidden = true) final ServerWebExchange exchange
+            @Parameter(name = "chatMessages", description = "", required = true) @Valid @RequestBody Mono<List<ChatMessage>> chatMessages,
+            @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         return chatPost(chatMessages, exchange);
     }
 
     // Override this method
-    default  Flux<String> chatPost(Mono<List<ChatMessage>> chatMessages,  final ServerWebExchange exchange) {
+    default Flux<String> chatPost(Mono<List<ChatMessage>> chatMessages, final ServerWebExchange exchange) {
         Flux<Void> result = Flux.empty();
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         return result.then(chatMessages).flatMapMany(
-            request -> Flux.error(new UnsupportedOperationException("Not implemented"))
+                request -> Flux.error(new UnsupportedOperationException("Not implemented"))
         );
 
     }
