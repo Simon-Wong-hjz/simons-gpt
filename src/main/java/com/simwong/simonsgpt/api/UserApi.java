@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -79,7 +78,7 @@ public interface UserApi {
     @RequestMapping(
             method = RequestMethod.POST,
             value = "/login",
-            produces = {"application/json"}
+            produces = {"text/plain"}
     )
     default Mono<ResponseEntity<String>> _loginUser(
             @Parameter(name = "user", description = "User data for login", required = true) @Valid @RequestBody User user,
@@ -90,39 +89,6 @@ public interface UserApi {
 
     // Override this method in the controller implementation
     default Mono<ResponseEntity<String>> loginUser(User user, final ServerWebExchange exchange) {
-        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
-        return Mono.error(new UnsupportedOperationException("Not implemented"));
-    }
-
-    /**
-     * POST /users/logout : Logout the current user
-     *
-     * @return Successful logout (status code 200)
-     * or Unauthorized if not logged in (status code 401)
-     */
-    @Operation(
-            operationId = "logoutUser",
-            summary = "Logout the current user",
-            tags = {"user"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful logout"),
-                    @ApiResponse(responseCode = "401", description = "Unauthorized if not logged in")
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.POST,
-            value = "/logout",
-            produces = {"application/json"}
-    )
-    default Mono<ResponseEntity<Void>> _logoutUser(@Parameter(hidden = true) final ServerWebExchange exchange) {
-        return logoutUser(exchange);
-    }
-
-    // Override this method in the controller implementation
-    default Mono<ResponseEntity<Void>> logoutUser(final ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         return Mono.error(new UnsupportedOperationException("Not implemented"));
     }

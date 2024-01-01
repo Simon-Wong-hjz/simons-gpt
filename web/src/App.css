@@ -1,10 +1,63 @@
 .App {
-  text-align: center;
+  text-align: left;
   font-family: 'Arial', sans-serif;
   height: 100vh; /* Use the full height of the screen */
   display: flex;
-  justify-content: center;
+  justify-content: stretch;
   align-items: center;
+  overflow: hidden;
+}
+
+.nav-menu {
+  background-color: #333; /* Dark background for the sidebar */
+  color: white;
+  width: 250px; /* Adjusted width for the sidebar */
+  height: 100vh; /* Make it fill the height of its parent */
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  overflow-x: hidden;
+  padding: 10px;
+  box-sizing: border-box; /* Include padding in width calculation */
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  justify-content: space-between; /* Push content to top and bottom */
+}
+
+.create-conversation-button {
+  display: block; /* Ensure the button takes the full width of the container */
+  width: calc(50% - 20px); /* Subtract the padding of the nav-menu */
+  margin-bottom: 10px; /* Add some space below the button */
+  padding: 10px; /* Padding to make the button taller, matching the design */
+  background-color: #4CAF50; /* A green color for the button */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center; /* Center the text inside the button */
+  font-size: 0.9em; /* Adjust font size as needed */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+  transition: background-color 0.2s, box-shadow 0.2s; /* Smooth transition for hover effect */
+}
+
+.create-conversation-button:hover {
+  background-color: #45a049; /* A slightly different shade of green for hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Optional: enhance shadow on hover */
+}
+
+.conversation-item {
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.conversation-item:hover {
+  background-color: #444; /* Slightly lighter on hover */
+}
+
+.conversation-item.active {
+  background-color: #555; /* A distinct background for active conversation */
+  font-weight: bold; /* Optional: make active conversation bold */
 }
 
 .chat-container {
@@ -12,12 +65,14 @@
   max-width: 600px; /* Maximum width */
   height: 80vh; /* 80% of the viewport height */
   margin: auto;
-  border: 1px solid #ddd;
+  /*border: 1px solid #ddd;*/
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  flex-grow: 1; /* Allows chat container to fill the rest of the horizontal space */
+  border-left: 1px solid #ddd; /* Separate from the sidebar */
 }
 
 .chat-window {
@@ -111,6 +166,20 @@
   animation: fadeInOut 3s forwards;
 }
 
+/* Info Message Styles */
+.info-message {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  padding: 15px;
+  background-color: #428bca;
+  color: white;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: fadeInOut 3s forwards;
+}
+
 .loading-spinner {
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
@@ -139,4 +208,108 @@
 .bot-message {
   align-self: flex-start;
   background-color: #f1f0f0; /* Different background for bot messages */
+}
+
+/* Positioning the auth section */
+.auth-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #bbbbbb;
+  border-top: 1px solid #eee; /* Matches the chat input border */
+}
+
+/* Description and Buttons Wrapper */
+.auth-content-wrapper {
+  display: flex;
+  justify-content: center; /* Center the description */
+  align-items: center;
+  flex-grow: 1; /* Allow the wrapper to grow and fill space */
+}
+
+/* Description text next to buttons */
+.auth-description {
+  margin-right: auto; /* Push everything else to the right */
+  color: #666;
+  font-size: 0.9em;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+  margin-left: auto; /* Align buttons to the right */
+}
+
+.auth-button-register {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background-color: #428bca;
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.auth-button-register:hover {
+  background-color: #3071a9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.auth-button-login {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background-color: #4cae4c;
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.auth-button-login:hover {
+  background-color: #4cae4c;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.auth-button-logout {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background-color: #d9534f;
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.auth-button-logout:hover {
+  background-color: #c9302c;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Add responsive behavior for the sidebar */
+@media (max-width: 768px) {
+  .nav-menu {
+    width: 100px; /* Smaller width on small screens */
+    overflow-x: hidden; /* Hide horizontal overflow */
+  }
+
+  .create-conversation-button,
+  .conversation-item {
+    padding-left: 10px; /* Adjust padding for text */
+  }
+
+  .create-conversation-button {
+    padding: 8px;
+    font-size: 0.8em; /* Smaller font size on small screens */
+  }
+
+  .conversation-item {
+    font-size: 0.8em; /* Smaller font size on small screens */
+  }
 }
