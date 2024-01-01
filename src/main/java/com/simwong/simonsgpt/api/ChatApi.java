@@ -5,9 +5,12 @@
  */
 package com.simwong.simonsgpt.api;
 
-import com.theokanning.openai.completion.chat.ChatMessage;
+import com.simwong.simonsgpt.domain.Conversation;
+import com.simwong.simonsgpt.domain.Message;
+import com.simwong.simonsgpt.entity.ChatRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,22 +27,21 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Validated
 @Tag(name = "chat", description = "Chat with default model")
+@RequestMapping("/chat")
 @SecurityRequirement(name = "bearerAuth")
 public interface ChatApi {
 
     /**
-     * POST /chat : Send a message to the default model
+     * POST /message : Send a message to the default model
      *
      * @param chatMessages (required)
      * @return Stream of chat responses (status code 200)
      * or Bad request (status code 400)
      */
     @Operation(
-            operationId = "chatPost",
+            operationId = "sendMessage",
             summary = "Send a message to the default model",
             tags = {"chat"},
             responses = {
@@ -50,26 +53,126 @@ public interface ChatApi {
     )
     @RequestMapping(
             method = RequestMethod.POST,
-            value = "/chat",
+            value = "/messages",
             produces = {"text/event-stream"},
             consumes = {"application/json"}
     )
 
-    default Flux<String> _chatPost(
-            @Parameter(name = "chatMessages", description = "", required = true) @Valid @RequestBody Mono<List<ChatMessage>> chatMessages,
+    default Flux<String> _sendMessage(
+            @Parameter(name = "chatMessages", description = "", required = true) @Valid @RequestBody Mono<ChatRequest> chatMessages,
             @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
-        return chatPost(chatMessages, exchange);
+        return sendMessage(chatMessages, exchange);
     }
 
     // Override this method
-    default Flux<String> chatPost(Mono<List<ChatMessage>> chatMessages, final ServerWebExchange exchange) {
+    default Flux<String> sendMessage(Mono<ChatRequest> chatMessages, final ServerWebExchange exchange) {
         Flux<Void> result = Flux.empty();
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         return result.then(chatMessages).flatMapMany(
                 request -> Flux.error(new UnsupportedOperationException("Not implemented"))
         );
+    }
 
+    /**
+     * POST /createConversation : Create a new conversation for login user
+     *
+     * @return Conversation (status code 200)
+     * or Bad request (status code 400)
+     */
+    @Operation(
+            operationId = "createConversation",
+            summary = "Create a new conversation for login user",
+            tags = {"chat"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Conversation", content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = Conversation.class))
+                    }),
+                    @ApiResponse(responseCode = "400", description = "Bad request")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/conversations",
+            produces = {"application/json"}
+    )
+    default Mono<?> _createConversation(
+            @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        return createConversation(exchange);
+    }
+
+    // Override this method
+    default Mono<?> createConversation(final ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return Mono.error(new UnsupportedOperationException("Not implemented"));
+    }
+
+    /**
+     * GET /conversations : List all conversations for login user
+     *
+     * @return List of all conversations (status code 200)
+     * or Bad request (status code 400)
+     */
+    @Operation(
+            operationId = "listConversations",
+            summary = "List all conversations",
+            tags = {"chat"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "List of all conversations", content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = Conversation[].class))
+                    }),
+                    @ApiResponse(responseCode = "400", description = "Bad request")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.GET,
+            value = "/conversations",
+            produces = {"application/json"}
+    )
+    default Flux<Conversation> _listConversations(final ServerWebExchange exchange) {
+        return listConversations(exchange);
+    }
+
+    // Override this method
+    default Flux<Conversation> listConversations(final ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return Flux.error(new UnsupportedOperationException("Not implemented"));
+    }
+
+    /**
+     * GET /listMessages : List all messages for a conversation
+     *
+     * @param conversationId (required)
+     * @return List of all messages (status code 200)
+     * or Bad request (status code 400)
+     */
+    @Operation(
+            operationId = "listMessages",
+            summary = "List all messages for a conversation",
+            tags = {"chat"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "List of all messages", content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = Message[].class))
+                    }),
+                    @ApiResponse(responseCode = "400", description = "Bad request")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.GET,
+            value = "/conversations/{conversationId}/messages",
+            produces = {"application/json"}
+    )
+    default Flux<Message> _listMessages(
+            @Parameter(name = "conversationId", description = "ID of conversation", required = true, in = ParameterIn.PATH) @PathVariable("conversationId") Integer conversationId,
+            final ServerWebExchange exchange) {
+        return listMessages(conversationId, exchange);
+    }
+
+    // Override this method
+    default Flux<Message> listMessages(Integer conversationId, final ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return Flux.error(new UnsupportedOperationException("Not implemented"));
     }
 
 }

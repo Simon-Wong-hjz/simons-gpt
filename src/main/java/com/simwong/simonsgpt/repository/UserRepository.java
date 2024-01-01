@@ -23,5 +23,5 @@ public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
     Mono<Void> deleteById(@NotNull Integer userId);
 
     @Query("UPDATE users SET username = :#{#user.username}, email = :#{#user.email}, mobile_number = :#{#user.mobileNumber}, password_hash = :#{#user.passwordHash}, updated_at = CURRENT_TIMESTAMP WHERE user_id = :#{#user.userId}")
-    Mono<User> updateUser(@NotNull User user);
+    Mono<Void> updateUser(@NotNull User user);
 }

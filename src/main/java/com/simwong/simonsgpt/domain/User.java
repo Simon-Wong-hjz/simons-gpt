@@ -17,23 +17,15 @@ import java.time.LocalDateTime;
 @Table("users")
 public class User {
     @Id
-    @Column("user_id")
     private Integer userId;
-    @Column("username")
     private String username;
-    @Column("email")
     private String email;
-    @Column("mobile_number")
     private String mobileNumber;
     @Column("password_hash")
     private String password;
-    @Column("is_deleted")
     private Boolean isDeleted;
-    @Column("created_at")
     private LocalDateTime createdAt;
-    @Column("updated_at")
     private LocalDateTime updatedAt;
-    @Column("deleted_at")
     private LocalDateTime deletedAt;
 
     public UserDTO toDTO() {
