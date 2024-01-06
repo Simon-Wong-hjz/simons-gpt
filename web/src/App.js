@@ -286,6 +286,7 @@ function App() {
             setIsAuthenticated(true);
         }
         fetchConversations();
+        // eslint-disable-next-line
     }, [isAuthenticated]);
 
 
