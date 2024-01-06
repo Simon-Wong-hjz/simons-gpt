@@ -305,15 +305,9 @@ function App() {
     const handleFormSubmit = (data) => {
         setShowModal(false);
         if (isLoginModal) {
-            login(data).then(r => {
-                setInfoMessage('登录成功');
-                setShowInfo(true);
-            });
+            login(data).then();
         } else {
-            register(data).then(r => {
-                setInfoMessage('注册成功');
-                setShowInfo(true);
-            });
+            register(data).then();
         }
     };
 
@@ -357,6 +351,8 @@ function App() {
         Cookies.set('username', data.username, { expires: 7 });
         Cookies.set('jwt-token', token, { expires: 7 });
         setIsAuthenticated(true);
+        setInfoMessage('登录成功');
+        setShowInfo(true);
     };
 
     // Function to handle user logout
