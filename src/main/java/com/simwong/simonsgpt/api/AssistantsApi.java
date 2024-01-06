@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import reactor.core.publisher.Mono;
 
 @Validated
 @Tag(name = "assistants", description = "Assistant management")
+@SecurityRequirement(name = "bearerAuth")
 public interface AssistantsApi {
 
     /**
@@ -33,29 +35,29 @@ public interface AssistantsApi {
      * @return A list of assistants (status code 200)
      */
     @Operation(
-        operationId = "assistantsGet",
-        summary = "List all assistants",
-        tags = { "assistants" },
-        responses = {
-            @ApiResponse(responseCode = "200", description = "A list of assistants", content = {
-                @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Assistant.class)))
-            })
-        }
+            operationId = "assistantsGet",
+            summary = "List all assistants",
+            tags = {"assistants"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "A list of assistants", content = {
+                            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Assistant.class)))
+                    })
+            }
     )
     @RequestMapping(
-        method = RequestMethod.GET,
-        value = "/assistants",
-        produces = { "application/json" }
+            method = RequestMethod.GET,
+            value = "/assistants",
+            produces = {"application/json"}
     )
-    
+
     default Mono<ResponseEntity<Flux<Assistant>>> _assistantsGet(
-        @Parameter(hidden = true) final ServerWebExchange exchange
+            @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         return assistantsGet(exchange);
     }
 
     // Override this method
-    default  Mono<ResponseEntity<Flux<Assistant>>> assistantsGet( final ServerWebExchange exchange) {
+    default Mono<ResponseEntity<Flux<Assistant>>> assistantsGet(final ServerWebExchange exchange) {
         Mono<Void> result = Mono.empty();
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {

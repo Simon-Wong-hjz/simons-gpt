@@ -1,18 +1,9 @@
 spring:
-  datasource:
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://simons-gpt.database.windows.net:1433;database=simons-gpt;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+  r2dbc:
+    url: r2dbc:pool:mssql://simons-gpt.database.windows.net:1433
     username: ${AZURE_SQL_USERNAME}
     password: ${AZURE_SQL_PASSWORD}
-    hikari:
-      connection-timeout: 60000
-      validation-timeout: 3000
-      idle-timeout: 60000
-      login-timeout: 5
-      max-lifetime: 60000
-      maximum-pool-size: 10
-      minimum-idle: 10
-      read-only: false
+    name: simons-gpt
   jackson:
     date-format: yyyy-MM-dd
     serialization:
@@ -32,18 +23,11 @@ management:
       exposure:
         include: "shutdown,health,info,metrics,loggers,threaddump,heapdump"
 
-mybatis-plus:
-  global-config:
-    db-config:
-      logic-delete-field: delFlag
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-      # print sql in console, for local debug
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
 openai:
   endpoint: "https://api.openai.com/v1"
   # set the key from Azure Web Apps configuration
   key: ${OPENAI_KEY}
   retry: 3
+
+jwt:
+  expiration: 86400000
