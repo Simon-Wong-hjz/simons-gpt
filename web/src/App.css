@@ -49,6 +49,9 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
 }
 
 .conversation-item:hover {
@@ -58,6 +61,18 @@
 .conversation-item.active {
   background-color: #555; /* A distinct background for active conversation */
   font-weight: bold; /* Optional: make active conversation bold */
+}
+
+.delete-conversation-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ff0000; /* Or any color you prefer */
+  margin-left: 0.5rem;
+}
+
+.delete-conversation-button i {
+  font-size: 1rem; /* Adjust the size as needed */
 }
 
 .chat-container {
@@ -310,6 +325,11 @@
   }
 
   .conversation-item {
-    font-size: 0.8em; /* Smaller font size on small screens */
+    font-size: 0.8rem; /* Smaller font size for smaller screens */
+    padding: 0.25rem; /* Less padding */
+  }
+
+  .delete-conversation-button i {
+    font-size: 0.8rem; /* Smaller icon for smaller screens */
   }
 }

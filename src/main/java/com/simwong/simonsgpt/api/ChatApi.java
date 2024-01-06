@@ -96,14 +96,14 @@ public interface ChatApi {
             value = "/conversations",
             produces = {"application/json"}
     )
-    default Mono<?> _createConversation(
+    default Mono<Conversation> _createConversation(
             @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         return createConversation(exchange);
     }
 
     // Override this method
-    default Mono<?> createConversation(final ServerWebExchange exchange) {
+    default Mono<Conversation> createConversation(final ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         return Mono.error(new UnsupportedOperationException("Not implemented"));
     }
@@ -138,6 +138,39 @@ public interface ChatApi {
     default Flux<Conversation> listConversations(final ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         return Flux.error(new UnsupportedOperationException("Not implemented"));
+    }
+
+    /**
+     * DELETE /conversations/{conversationId} : Delete a conversation
+     * This method deletes a specific conversation identified by the conversationId.
+     *
+     * @param conversationId (required) The ID of the conversation to delete.
+     * @return Success message or error (status code 200 for success, 400 or 404 for errors)
+     */
+    @Operation(
+            operationId = "deleteConversation",
+            summary = "Delete a specific conversation",
+            tags = {"chat"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Conversation deleted successfully"),
+                    @ApiResponse(responseCode = "400", description = "Bad request, invalid input"),
+                    @ApiResponse(responseCode = "404", description = "Conversation not found")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.DELETE,
+            value = "/conversations/{conversationId}"
+    )
+    default Mono<Void> _deleteConversation(
+            @Parameter(name = "conversationId", description = "ID of the conversation to delete", required = true, in = ParameterIn.PATH) @PathVariable("conversationId") Integer conversationId,
+            final ServerWebExchange exchange) {
+        return deleteConversation(conversationId, exchange);
+    }
+
+    // Override this method
+    default Mono<Void> deleteConversation(Integer conversationId, final ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return Mono.error(new UnsupportedOperationException("Not implemented"));
     }
 
     /**

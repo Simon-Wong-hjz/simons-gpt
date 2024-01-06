@@ -33,6 +33,11 @@ public class ChatController implements ChatApi {
     }
 
     @Override
+    public Mono<Void> deleteConversation(Integer conversationId, ServerWebExchange exchange) {
+        return chatService.deleteConversation(conversationId, exchange);
+    }
+
+    @Override
     public Flux<Message> listMessages(Integer conversationId, ServerWebExchange exchange) {
         return chatService.listMessages(conversationId, exchange);
     }

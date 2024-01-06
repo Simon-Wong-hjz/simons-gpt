@@ -6,9 +6,9 @@ import './App.css';
 function App() {
 
     const [inputMessage, setInputMessage] = useState('');
-    const [ongoingConversation, setOngoingConversation] = useState([]); // Track the ongoing conversation
+    const [ongoingConversation, setOngoingConversation] = useState([]); // Track the ongoing conversation's messages
     const [conversations, setConversations] = useState([]); // Track the saved conversations
-    const [currentConversationId, setCurrentConversationId] = useState(null);
+    const [currentConversationId, setCurrentConversationId] = useState(null); // Track the current conversation's ID
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showError, setShowError] = useState(false);
@@ -22,8 +22,8 @@ function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
 
-    // let API_URL = 'https://simons-gpt.azurewebsites.net';
-    let API_URL = 'http://localhost:8080';
+    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    // let API_URL = 'http://localhost:8080';
 
     const handleInputChange = (event) => {
         setInputMessage(event.target.value);
@@ -40,7 +40,7 @@ function App() {
             setShowInfo(false);
 
             // if this is the first message of a new conversation, create one in the backend
-            if (isAuthenticated && ongoingConversation.length === 0) {
+            if (isAuthenticated && !currentConversationId) {
                 try {
                     const conversation = await createConversation();
                     await fetchConversations();
@@ -191,6 +191,7 @@ function App() {
             console.error(errorText);
             setErrorMessage(`获取对话记录失败，请刷新重试`);
             setShowError(true);
+            logout()
         }
     };
 
@@ -234,6 +235,28 @@ function App() {
         });
     }
 
+    const deleteConversation = async (conversationId) => {
+        const jwtToken = Cookies.get('jwt-token');
+        const response = await fetch(`${API_URL}/chat/conversations/${conversationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            // Remove the conversation from the state
+            setConversations(conversations.filter(conversation => conversation.conversationId !== conversationId));
+        } else {
+            // Handle error
+            const errorText = await response.text();
+            console.error(`Failed to delete conversation: ${errorText}`);
+            setErrorMessage(`删除对话失败：${errorText}`);
+            setShowError(true);
+        }
+    };
+
     const fetchMessages = async (conversationId) => {
         if (!isAuthenticated) return;
 
@@ -256,6 +279,12 @@ function App() {
     };
 
     useEffect(() => {
+        const savedUsername = Cookies.get('username');
+        const savedToken = Cookies.get('jwt-token');
+        if (savedUsername && savedToken) {
+            setUsername(savedUsername);
+            setIsAuthenticated(true);
+        }
         fetchConversations();
     }, [isAuthenticated]);
 
@@ -337,7 +366,7 @@ function App() {
         setIsAuthenticated(false);
     };
 
-    const NavigationMenu = ({ isAuthenticated, conversations, onSelectConversation }) => {
+    const NavigationMenu = ({ isAuthenticated, conversations, onSelectConversation, onDeleteConversation }) => {
         if (!isAuthenticated) {
             return (
                 <div className="nav-menu">
@@ -359,6 +388,12 @@ function App() {
                          className={`conversation-item ${currentConversationId === conversation.conversationId ? 'active' : ''}`}
                          onClick={() => onSelectConversation(conversation.conversationId)}>
                         {conversation.title || `Conversation ${conversation.conversationId}`}
+                        <button className="delete-conversation-button" onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteConversation(conversation.conversationId);
+                        }}>
+                            <i className="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 ))}
             </div>
@@ -382,6 +417,7 @@ function App() {
                     isAuthenticated={isAuthenticated}
                     conversations={conversations}
                     onSelectConversation={(conversationId) => switchConversation(conversationId)}
+                    onDeleteConversation={(conversationId) => deleteConversation(conversationId)}
                 />
             </div>
             <div className="chat-container">

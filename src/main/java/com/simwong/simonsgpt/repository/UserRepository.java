@@ -4,6 +4,7 @@ import com.simwong.simonsgpt.domain.User;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
@@ -19,9 +20,10 @@ public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
 
     @NotNull
     @Override
-    @Query("UPDATE users SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE user_id = :userId AND is_deleted = 0")
+    @Query("UPDATE users SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE user_id = :userId AND is_deleted = 0")
     Mono<Void> deleteById(@NotNull Integer userId);
 
-    @Query("UPDATE users SET username = :#{#user.username}, email = :#{#user.email}, mobile_number = :#{#user.mobileNumber}, password_hash = :#{#user.passwordHash}, updated_at = CURRENT_TIMESTAMP WHERE user_id = :#{#user.userId}")
+    @Transactional
+    @Query("UPDATE users SET username = :#{#user.username}, email = :#{#user.email}, mobile_number = :#{#user.mobileNumber}, password_hash = :#{#user.passwordHash}, updated_at = CURRENT_TIMESTAMP WHERE user_id = :#{#user.userId} AND is_deleted = 0")
     Mono<Void> updateUser(@NotNull User user);
 }

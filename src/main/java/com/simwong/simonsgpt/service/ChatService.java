@@ -11,7 +11,6 @@ import com.theokanning.openai.completion.chat.ChatMessageRole;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,7 +27,6 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final JwtTokenService jwtTokenService;
 
-    @Transactional
     public Flux<String> sendMessage(Mono<ChatRequest> chatPostRequestMono) {
         // Use a StringBuilder to collect the streamed data
         StringBuilder completeResponse = new StringBuilder();
@@ -50,7 +48,6 @@ public class ChatService {
                 .doFinally(signalType -> saveMessage(completeResponse.toString(), chatMessages).subscribe());
     }
 
-    @Transactional
     public Mono<Conversation> createConversation(ServerWebExchange exchange) {
         return Mono.deferContextual(contextView -> {
             String jwt;
@@ -130,6 +127,28 @@ public class ChatService {
                         }
                         return messageRepository.findByConversationId(conversationId);
                     });
+        });
+    }
+
+    public Mono<Void> deleteConversation(Integer conversationId, ServerWebExchange exchange) {
+        return Mono.deferContextual(contextView -> {
+            String jwt;
+            Integer userId;
+            try {
+                jwt = contextView.get("jwt");
+                userId = jwtTokenService.extractValue(jwt, "userId", Integer.class);
+            } catch (Exception e) {
+                return Mono.error(new UnauthorizedException("未登录", e));
+            }
+            return conversationRepository.findById(conversationId)
+                    .flatMap(conversation -> {
+                        if (!conversation.getUserId().equals(userId)) {
+                            return Mono.error(new UnauthorizedException("无权限"));
+                        }
+                        return Mono.empty();
+                    })
+                    .then(messageRepository.deleteByConversationId(conversationId))
+                    .then(conversationRepository.deleteById(conversationId));
         });
     }
 }
