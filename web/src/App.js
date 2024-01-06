@@ -1,29 +1,63 @@
-import React, {useEffect, useState} from 'react';
-import Modal from './Modal';
+import React, { useEffect, useRef, useState } from 'react';
+// import Modal from './Modal';
+import { Button, Flex, Form, Input, Layout, List, Menu, message, Modal, Space } from 'antd';
 import Cookies from 'js-cookie';
+import 'antd/dist/reset.css';
+import { DeleteOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import './App.css';
 
-function App() {
+const { Header, Content, Sider } = Layout;
+const version = 'v1.1.0';
+
+const App = () => {
 
     const [inputMessage, setInputMessage] = useState('');
     const [ongoingConversation, setOngoingConversation] = useState([]); // Track the ongoing conversation's messages
     const [conversations, setConversations] = useState([]); // Track the saved conversations
     const [currentConversationId, setCurrentConversationId] = useState(null); // Track the current conversation's ID
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [showError, setShowError] = useState(false);
-    const [infoMessage, setInfoMessage] = useState('');
-    const [showInfo, setShowInfo] = useState(false);
     const [abortController, setAbortController] = useState(null);
-
-    const [showModal, setShowModal] = useState(false);
-    const [isLoginModal, setIsLoginModal] = useState(true); // True for login, false for register
-
+    const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
 
-    let API_URL = 'https://simons-gpt.azurewebsites.net';
-    // let API_URL = 'http://localhost:8080';
+    const [form] = Form.useForm();
+    const [messageApi, contextHolder] = message.useMessage();
+    // if the window width is less than 576px, the sider will be collapsed by default
+    const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
+    const messagesEndRef = useRef(null);
+
+    // let API_URL = 'https://simons-gpt.azurewebsites.net';
+    let API_URL = 'http://localhost:8080';
+
+    const info = (message) => {
+        messageApi.info(message).then();
+    };
+    const success = (message) => {
+        messageApi.open({
+            type: 'success',
+            content: message,
+        }).then();
+    };
+    const error = (message) => {
+        messageApi.open({
+            type: 'error',
+            content: message,
+        }).then();
+    };
+    const warning = (message) => {
+        messageApi.open({
+            type: 'warning',
+            content: message,
+        }).then();
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     const handleInputChange = (event) => {
         setInputMessage(event.target.value);
@@ -34,10 +68,6 @@ function App() {
             const controller = new AbortController();
             setAbortController(controller);
             setIsLoading(true); // Start loading
-            setErrorMessage('');
-            setShowError(false);
-            setInfoMessage('');
-            setShowInfo(false);
 
             // if this is the first message of a new conversation, create one in the backend
             if (isAuthenticated && !currentConversationId) {
@@ -47,25 +77,13 @@ function App() {
                     setCurrentConversationId(conversation.conversationId);
                 } catch (error) {
                     console.error(error);
-                    setErrorMessage(`创建对话记录失败，本条对话将不会被保存`);
-                    setShowError(true);
+                    error(`创建对话记录失败，本条对话将不会被保存`);
                 }
             }
             // Add the user message to the conversation
             setOngoingConversation(prevState => [...prevState, { role: 'user', content: inputMessage }]);
             setInputMessage(''); // Clear the input field
         }
-    };
-
-    // Render messages with different alignment based on sender
-    const renderMessages = () => {
-        return ongoingConversation.map((msg, index) => (
-            <div
-                key={index}
-                className={`message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`}>
-                {msg.content.replaceAll(/\n\n(?!\n)/g, '')}
-            </div>
-        ));
     };
 
     const interruptProcess = () => {
@@ -77,6 +95,7 @@ function App() {
     }
 
     useEffect(() => {
+        scrollToBottom();
         if (ongoingConversation.length > 0 && ongoingConversation[ongoingConversation.length - 1].role === 'user') {
             const jwtToken = Cookies.get('jwtToken');
             const headers = {
@@ -128,7 +147,10 @@ function App() {
                                     setOngoingConversation(conversation => {
                                         // Append the text to the last assistant message if it exists and is the last one
                                         if (conversation.length && conversation[conversation.length - 1].role === 'assistant') {
-                                            return [...conversation.slice(0, -1), { ...conversation[conversation.length - 1], content: conversation[conversation.length - 1].content + text }];
+                                            return [...conversation.slice(0, -1), {
+                                                ...conversation[conversation.length - 1],
+                                                content: conversation[conversation.length - 1].content + text
+                                            }];
                                         } else {
                                             // Otherwise, add a new assistant message
                                             return [...conversation, { role: 'assistant', content: text }];
@@ -141,12 +163,12 @@ function App() {
                                         console.log('Fetch aborted');
                                     } else {
                                         console.error(error);
-                                        setErrorMessage('请求失败');
-                                        setShowError(true);
+                                        error('请求失败');
                                     }
                                     setIsLoading(false);
                                 });
                             }
+
                             push();
                         }
                     });
@@ -156,17 +178,18 @@ function App() {
                         console.log('Fetch aborted');
                     } else {
                         console.error(error);
-                        setErrorMessage('请求失败');
-                        setShowError(true);
+                        error('请求失败');
                     }
                     setIsLoading(false);
                 });
         }
+        fetchConversations().then();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ongoingConversation]);
 
     const handleKeyPress = async (event) => {
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
+            event.preventDefault();
             await sendMessage();
         }
     };
@@ -189,8 +212,7 @@ function App() {
         } else {
             const errorText = await response.text();
             console.error(errorText);
-            setErrorMessage(`获取对话记录失败，请刷新重试`);
-            setShowError(true);
+            error(`获取对话记录失败，请重新登录`);
             logout()
         }
     };
@@ -219,8 +241,7 @@ function App() {
         } else {
             const errorText = await response.text();
             console.error(errorText);
-            setErrorMessage(`创建对话记录失败，本条对话将不会被保存`);
-            setShowError(true);
+            error(`创建对话记录失败，本条对话将不会被保存`);
         }
     };
 
@@ -231,30 +252,27 @@ function App() {
             messages.forEach(message => {
                 setOngoingConversation(prevState => [...prevState, { role: message.role, content: message.content }]);
             })
-            renderMessages();
         });
     }
 
     const deleteConversation = async (conversationId) => {
         const jwtToken = Cookies.get('jwt-token');
-        const response = await fetch(`${API_URL}/chat/conversations/${conversationId}`, {
+        await fetch(`${API_URL}/chat/conversations/${conversationId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${jwtToken}`,
                 'Content-Type': 'application/json'
             }
-        });
-
-        if (response.ok) {
-            // Remove the conversation from the state
-            setConversations(conversations.filter(conversation => conversation.conversationId !== conversationId));
-        } else {
-            // Handle error
-            const errorText = await response.text();
-            console.error(`Failed to delete conversation: ${errorText}`);
-            setErrorMessage(`删除对话失败：${errorText}`);
-            setShowError(true);
-        }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    error(`删除对话失败：${response.text()}`)
+                } else {
+                    // Remove the conversation from the state
+                    setConversations(conversations.filter(conversation => conversation.conversationId !== conversationId));
+                    success('对话已删除。');
+                }
+            });
     };
 
     const fetchMessages = async (conversationId) => {
@@ -270,11 +288,10 @@ function App() {
         });
 
         if (response.ok) {
-            return  await response.json();
+            return await response.json();
         } else {
             const errorText = await response.text();
-            setErrorMessage(`获取对话记录失败：${errorText}，请刷新重试`);
-            setShowError(true);
+            error(`获取对话记录失败：${errorText}，请刷新重试`);
         }
     };
 
@@ -285,74 +302,59 @@ function App() {
             setUsername(savedUsername);
             setIsAuthenticated(true);
         }
-        fetchConversations();
+        fetchConversations().then();
         // eslint-disable-next-line
     }, [isAuthenticated]);
 
-
-    // Function to handle login/register button click
-    const handleAuthButtonClick = (isLogin) => {
-        setIsLoginModal(isLogin);
-        setShowModal(true);
-    };
-
-    // Function to close the modal
-    const handleCloseModal = () => {
-        setShowModal(false);
-    };
-
-    // Function to handle form submission
-    const handleFormSubmit = (data) => {
-        setShowModal(false);
-        if (isLoginModal) {
-            login(data).then();
-        } else {
-            register(data).then();
+    // Check the last visit time when the component mounts
+    useEffect(() => {
+        const visitedVersion = localStorage.getItem('visitedVersion');
+        if (!visitedVersion || visitedVersion !== version) {
+            setShowUpdateModal(true);
         }
+    }, []);
+
+    const handleVisit = () => {
+        setShowUpdateModal(false);
+        localStorage.setItem('visitedVersion', version);
     };
 
     // Function to handle user registration
     const register = async (data) => {
-        const response = await fetch(`${API_URL}/users/register`, {
+        await fetch(`${API_URL}/users/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            setErrorMessage(`注册失败：${errorText}`);
-            setShowError(true);
-            return;
-        }
-
-        setInfoMessage('注册成功');
-        setShowInfo(true);
-        await login(data);
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    error(`注册失败：${await response.text()}`)
+                } else {
+                    success('注册成功');
+                    await login(data)
+                }
+            });
     };
 
     // Function to handle user login
     const login = async (data) => {
-        const response = await fetch(`${API_URL}/users/login`, {
+        await fetch(`${API_URL}/users/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            setErrorMessage(`登录失败：${errorText}`);
-            setShowError(true);
-            return;
-        }
-
-        const token = await response.text();
-        setUsername(data.username);
-        Cookies.set('username', data.username, { expires: 7 });
-        Cookies.set('jwt-token', token, { expires: 7 });
-        setIsAuthenticated(true);
-        setInfoMessage('登录成功');
-        setShowInfo(true);
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    error(`登录失败：${await response.text()}`)
+                } else {
+                    const token = await response.text();
+                    setUsername(data.username);
+                    Cookies.set('username', data.username, { expires: 7 });
+                    Cookies.set('jwt-token', token, { expires: 7 });
+                    setIsAuthenticated(true);
+                    success('登录成功');
+                }
+            });
     };
 
     // Function to handle user logout
@@ -361,116 +363,344 @@ function App() {
         Cookies.remove('username');
         Cookies.remove('jwt-token');
         setIsAuthenticated(false);
+        success('注销成功')
     };
 
-    const NavigationMenu = ({ isAuthenticated, conversations, onSelectConversation, onDeleteConversation }) => {
+    const AuthButtons = () => {
         if (!isAuthenticated) {
             return (
-                <div className="nav-menu">
-                    <button className="create-conversation-button" onClick={newConversation}>
-                        新对话
-                    </button>
-                    登录以保存对话记录
-                </div>
+                <>
+                    <Space>
+                        <span>登录后可以保存对话记录</span>
+                        <Button
+                            type="primary"
+                            onClick={() => setShowRegistrationModal(true)}>
+                            注册
+                        </Button>
+                        <Button onClick={() => setShowLoginModal(true)}>登录</Button>
+                    </Space>
+                </>
+            );
+        } else {
+            return (
+                <>
+                    <Space>
+                        <span>欢迎你，{username}</span>
+                        <Button onClick={() => setShowLogoutModal(true)}>注销</Button>
+                    </Space>
+                </>
+            );
+        }
+    };
+
+    const RegistrationModal = () => {
+        return (
+            <Modal
+                forceRender
+                title="注册"
+                centered
+                okText="注册"
+                open={showRegistrationModal}
+                onCancel={() => setShowRegistrationModal(false)}
+                onOk={() => {
+                    form
+                        .validateFields()
+                        .then(values => {
+                            form.resetFields();
+                            setShowRegistrationModal(false);
+                            register(values).then();
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                }}
+            >
+                <p style={{
+                    color: 'grey',
+                    fontSize: '12px',
+                    lineHeight: '25px'
+                }}>
+                    提示：注册仅用于保存对话记录，不建议使用你在其它平台的密码，因为除了把你的真实密码加密一次之外，我的服务器没有任何安全措施。</p>
+                <p style={{
+                    color: 'grey',
+                    fontSize: '12px',
+                    lineHeight: '25px'
+                }}>
+                    所以你可以随便输一个，反正我也没有限制密码格式，诶嘿。
+                </p>
+                <Form
+                    name="register"
+                    form={form}
+                >
+                    <Form.Item
+                        name="username"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入用户名',
+                            },
+                        ]}
+                    >
+                        <Input placeholder="用户名"/>
+                    </Form.Item>
+                    <Form.Item
+                        name="password"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入密码',
+                            },
+                        ]}
+                    >
+                        <Input.Password placeholder="密码"/>
+                    </Form.Item>
+                </Form>
+            </Modal>
+        );
+    }
+
+    const LoginModal = () => {
+        return (
+            <Modal
+                title="登录"
+                centered
+                okText="登录"
+                open={showLoginModal}
+                onCancel={() => setShowLoginModal(false)}
+                onOk={() => {
+                    form
+                        .validateFields()
+                        .then(values => {
+                            form.resetFields();
+                            setShowLoginModal(false);
+                            login(values).then();
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                }}
+            >
+                <Form
+                    name="login"
+                    form={form}
+                >
+                    <Form.Item
+                        name="username"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入用户名',
+                            },
+                        ]}
+                    >
+                        <Input placeholder="用户名"/>
+                    </Form.Item>
+                    <Form.Item
+                        name="password"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入密码',
+                            },
+                        ]}
+                    >
+                        <Input.Password placeholder="密码"/>
+                    </Form.Item>
+                </Form>
+            </Modal>
+        );
+    }
+
+    const LogoutModal = () => {
+        return (
+            <Modal
+                title="注销"
+                centered
+                okText="注销"
+                open={showLogoutModal}
+                onOk={() => {
+                    logout();
+                    setShowLogoutModal(false);
+                }}
+                onCancel={() => setShowLogoutModal(false)}
+            >
+                <p style={{
+                    color: 'grey',
+                    fontSize: '12px',
+                    lineHeight: '25px'
+                }}>
+                    注销后将无法保存对话记录，但是你可以继续使用聊天功能。
+                </p>
+            </Modal>
+        );
+    }
+
+    const UpdateModal = () => {
+        return (
+            <Modal
+                title="欢迎来到新版本！"
+                open={showUpdateModal}
+                onOk={handleVisit}
+                onCancel={handleVisit}
+                footer={null} // Remove the default footer buttons
+                // Allow the user to close the modal by clicking on the mask (outside the modal)
+                maskClosable={true}
+            >
+                <p>版本更新说明：{version}</p>
+                <p>1. 支持了用户注册和登录，登录后可以保存对话记录，并且可以随时继续之前的对话</p>
+                <p>2. 数据库改用SQL Server，Azure的MySql贵得离谱</p>
+                <p>3. 增加了停止生成的功能，在对话时可以打断GPT的生成</p>
+                <p>4. 重构了前端，用Ant Design更好地支持小屏幕设备</p>
+            </Modal>
+        );
+    }
+
+    const modalDeleteConversation = (conversationId) => {
+        Modal.confirm({
+            title: '确定要删除这段对话吗？',
+            content: '本操作无法撤销。',
+            onOk() {
+                deleteConversation(conversationId)
+                    .catch(error => {
+                        console.error(error);
+                    });
+            },
+        });
+    };
+
+
+    const NavigationMenu = ({ conversations, onSelectConversation }) => {
+        if (!isAuthenticated) {
+            return (
+                <Menu theme={"dark"} mode="inline">
+                    <Flex style={{ padding: '10px' }} gap="middle" vertical>
+                        <Button type="primary" block onClick={newConversation}>
+                            开启新对话
+                        </Button>
+                    </Flex>
+                </Menu>
             );
         }
 
         return (
-            <div className="nav-menu">
-                <button className="create-conversation-button" onClick={newConversation}>
-                    新对话
-                </button>
-                {conversations.map(conversation => (
-                    <div key={conversation.conversationId}
-                         className={`conversation-item ${currentConversationId === conversation.conversationId ? 'active' : ''}`}
-                         onClick={() => onSelectConversation(conversation.conversationId)}>
-                        {conversation.title || `Conversation ${conversation.conversationId}`}
-                        <button className="delete-conversation-button" onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteConversation(conversation.conversationId);
-                        }}>
-                            <i className="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                ))}
-            </div>
+            <Menu theme={"dark"} mode="inline">
+                <Flex style={{ padding: '10px' }} gap="middle" vertical>
+                    <Button type="primary" block onClick={newConversation}>
+                        新对话
+                    </Button>
+                    {conversations.map(conversation => (
+                        <Menu.Item key={conversation.conversationId}
+                                   onClick={() => onSelectConversation(conversation.conversationId)}>
+                            <Space>
+                                {conversation.title || `Conversation ${conversation.conversationId}`}
+                                <Button shape="circle"
+                                        icon={<DeleteOutlined/>}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            modalDeleteConversation(conversation.conversationId);
+                                        }}/>
+                            </Space>
+                        </Menu.Item>
+                    ))}
+                </Flex>
+            </Menu>
         );
     };
 
     return (
-        <div className="App">
-            {showError && (
-                <div className="error-message">
-                    {errorMessage}
-                </div>
-            )}
-            {showInfo && (
-                <div className="info-message">
-                    {infoMessage}
-                </div>
-            )}
-            <div className="nav-menu">
+        <Layout hasSider style={{ minHeight: '100vh' }}>
+            {contextHolder}
+            <RegistrationModal/>
+            <LoginModal/>
+            <LogoutModal/>
+            <UpdateModal/>
+            <Sider collapsible
+                   trigger={null}
+                   collapsed={siderCollapsed}
+                   collapsedWidth="0"
+                   style={{
+                       overflow: 'auto',
+                       height: '100vh',
+                       position: 'sticky',
+                       left: 0,
+                       top: 0,
+                       bottom: 0,
+                   }}>
                 <NavigationMenu
-                    isAuthenticated={isAuthenticated}
                     conversations={conversations}
                     onSelectConversation={(conversationId) => switchConversation(conversationId)}
-                    onDeleteConversation={(conversationId) => deleteConversation(conversationId)}
                 />
-            </div>
-            <div className="chat-container">
-                <div className="auth-section">
-                    {isAuthenticated ? (
-                        <>
-                            <div className="auth-description">
-                                欢迎你，{username}
-                            </div>
-                            <div className="auth-buttons">
-                                <button className="auth-button-logout" onClick={logout}>注销</button>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="auth-description">
-                                登录后可以保存对话记录
-                            </div>
-                            <div className="auth-buttons">
-                                <button className="auth-button-register"
-                                        onClick={() => handleAuthButtonClick(false)}>注册
-                                </button>
-                                <button className="auth-button-login" onClick={() => handleAuthButtonClick(true)}>登录
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
-                {isLoading && <div className="loading-spinner"></div>}
-                <div className="chat-window">
-                    <div className="conversation-view">
-                        {renderMessages()}
+            </Sider>
+            <Layout>
+                <Header style={{
+                    background: '#fff',
+                    padding: '0 16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                    width: '100%',
+                }}>
+                    <Button
+                        type="text"
+                        icon={siderCollapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                        onClick={() => setSiderCollapsed(!siderCollapsed)}
+                        style={{
+                            fontSize: '12px',
+                            width: 64,
+                            height: 64,
+                        }}
+                    >
+                        {siderCollapsed ? "点击展开侧栏" : "点击收起侧栏"}
+                    </Button>
+                    <div>
+                        {/* Placeholder */}
                     </div>
-                    <div className="chat-input">
-                        <input
-                            type="text"
-                            placeholder="请输入你的问题..."
-                            value={inputMessage}
-                            onChange={handleInputChange}
-                            onKeyPress={handleKeyPress}
-                        />
-                        {isLoading ? (
-                            <button onClick={interruptProcess}>停止生成</button>
-                        ) : (
-                            <button onClick={sendMessage}>发送</button>
-                        )}
+                    <div>
+                        <AuthButtons/>
                     </div>
-                </div>
-            </div>
-            <Modal
-                show={showModal}
-                onClose={handleCloseModal}
-                isLogin={isLoginModal}
-                onFormSubmit={handleFormSubmit}
-            />
-        </div>
+                </Header>
+                <Layout>
+                    <Content style={{ margin: '24px 16px 0' }}>
+                        <div className="chat-area" style={{ padding: 24, background: '#fff' }}>
+                            <div className="message-list">
+                                <List
+                                    style={{ overflowY: 'auto' }}
+                                    itemLayout="horizontal"
+                                    dataSource={ongoingConversation}
+                                    renderItem={item => (
+                                        <List.Item
+                                            style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                            <div className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
+                                        </List.Item>
+                                    )}
+                                />
+                            </div>
+                            {/* Invisible element at the end of the messages */}
+                            <div ref={messagesEndRef} />
+                            <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
+                                <Input.TextArea required
+                                                placeholder="输入你的问题……"
+                                                style={{ width: 'calc(100% - 100px)' }}
+                                                value={inputMessage}
+                                                onChange={handleInputChange}
+                                                onPressEnter={handleKeyPress}
+                                                autoSize/>
+                                {isLoading ? (
+                                    <Button onClick={interruptProcess}>停止生成</Button>
+                                ) : (
+                                    <Button type="primary" onClick={sendMessage} disabled={!inputMessage.trim()}>
+                                        发送
+                                    </Button>
+                                )}
+                            </Space.Compact>
+                        </div>
+                    </Content>
+                </Layout>
+            </Layout>
+        </Layout>
     );
 }
 
