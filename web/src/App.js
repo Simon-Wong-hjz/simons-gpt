@@ -30,25 +30,25 @@ const App = () => {
     const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
     const messagesEndRef = useRef(null);
 
-    // let API_URL = 'https://simons-gpt.azurewebsites.net';
-    let API_URL = 'http://localhost:8080';
+    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    // let API_URL = 'http://localhost:8080';
 
-    const info = (message) => {
+    const infoMessage = (message) => {
         messageApi.info(message).then();
     };
-    const success = (message) => {
+    const successMessage = (message) => {
         messageApi.open({
             type: 'success',
             content: message,
         }).then();
     };
-    const error = (message) => {
+    const errorMessage = (message) => {
         messageApi.open({
             type: 'error',
             content: message,
         }).then();
     };
-    const warning = (message) => {
+    const warningMessage = (message) => {
         messageApi.open({
             type: 'warning',
             content: message,
@@ -77,7 +77,7 @@ const App = () => {
                     setCurrentConversationId(conversation.conversationId);
                 } catch (error) {
                     console.error(error);
-                    error(`创建对话记录失败，本条对话将不会被保存`);
+                    errorMessage('创建对话记录失败，本条对话将不会被保存');
                 }
             }
             // Add the user message to the conversation
@@ -162,8 +162,9 @@ const App = () => {
                                     if (error.name === 'AbortError') {
                                         console.log('Fetch aborted');
                                     } else {
+                                        // Handle other errors
                                         console.error(error);
-                                        error('请求失败');
+                                        errorMessage('请求失败');
                                     }
                                     setIsLoading(false);
                                 });
@@ -177,13 +178,13 @@ const App = () => {
                     if (error.name === 'AbortError') {
                         console.log('Fetch aborted');
                     } else {
+                        // Handle other errors
                         console.error(error);
-                        error('请求失败');
+                        errorMessage('请求失败');
                     }
                     setIsLoading(false);
                 });
         }
-        fetchConversations().then();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ongoingConversation]);
 
@@ -212,13 +213,14 @@ const App = () => {
         } else {
             const errorText = await response.text();
             console.error(errorText);
-            error(`获取对话记录失败，请重新登录`);
+            errorMessage(`获取对话记录失败，请重新登录`);
             logout()
         }
     };
 
     const newConversation = async () => {
         setOngoingConversation([]);
+        setCurrentConversationId(null);
     }
 
     const createConversation = async () => {
@@ -241,7 +243,7 @@ const App = () => {
         } else {
             const errorText = await response.text();
             console.error(errorText);
-            error(`创建对话记录失败，本条对话将不会被保存`);
+            errorMessage(`创建对话记录失败，本条对话将不会被保存`);
         }
     };
 
@@ -266,11 +268,11 @@ const App = () => {
         })
             .then(response => {
                 if (!response.ok) {
-                    error(`删除对话失败：${response.text()}`)
+                    errorMessage(`删除对话失败：${response.text()}`)
                 } else {
                     // Remove the conversation from the state
                     setConversations(conversations.filter(conversation => conversation.conversationId !== conversationId));
-                    success('对话已删除。');
+                    successMessage('对话已删除。');
                 }
             });
     };
@@ -291,7 +293,7 @@ const App = () => {
             return await response.json();
         } else {
             const errorText = await response.text();
-            error(`获取对话记录失败：${errorText}，请刷新重试`);
+            errorMessage(`获取对话记录失败：${errorText}，请刷新重试`);
         }
     };
 
@@ -328,9 +330,9 @@ const App = () => {
         })
             .then(async response => {
                 if (!response.ok) {
-                    error(`注册失败：${await response.text()}`)
+                    errorMessage(`注册失败：${await response.text()}`)
                 } else {
-                    success('注册成功');
+                    successMessage('注册成功');
                     await login(data)
                 }
             });
@@ -345,14 +347,14 @@ const App = () => {
         })
             .then(async response => {
                 if (!response.ok) {
-                    error(`登录失败：${await response.text()}`)
+                    errorMessage(`登录失败：${await response.text()}`)
                 } else {
                     const token = await response.text();
                     setUsername(data.username);
                     Cookies.set('username', data.username, { expires: 7 });
                     Cookies.set('jwt-token', token, { expires: 7 });
                     setIsAuthenticated(true);
-                    success('登录成功');
+                    successMessage('登录成功');
                 }
             });
     };
@@ -363,7 +365,7 @@ const App = () => {
         Cookies.remove('username');
         Cookies.remove('jwt-token');
         setIsAuthenticated(false);
-        success('注销成功')
+        successMessage('注销成功')
     };
 
     const AuthButtons = () => {
@@ -588,7 +590,7 @@ const App = () => {
                     <Button type="primary" block onClick={newConversation}>
                         新对话
                     </Button>
-                    {conversations.map(conversation => (
+                    {conversations?.map(conversation => (
                         <Menu.Item key={conversation.conversationId}
                                    onClick={() => onSelectConversation(conversation.conversationId)}>
                             <Space>
@@ -673,13 +675,14 @@ const App = () => {
                                     renderItem={item => (
                                         <List.Item
                                             style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                            <div className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
+                                            <div
+                                                className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
                                         </List.Item>
                                     )}
                                 />
                             </div>
                             {/* Invisible element at the end of the messages */}
-                            <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef}/>
                             <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
                                 <Input.TextArea required
                                                 placeholder="输入你的问题……"

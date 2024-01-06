@@ -13,6 +13,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -34,6 +35,13 @@ public class SecurityConfiguration {
                                 .anyExchange().permitAll()
                 )
                 .addFilterAt(new JwtTokenAuthenticationFilter(jwtTokenService), SecurityWebFiltersOrder.HTTP_BASIC)
+                .cors(corsSpec -> corsSpec.configurationSource(exchange -> {
+                    CorsConfiguration corsConfiguration = new CorsConfiguration();
+                    corsConfiguration.addAllowedOrigin("*");
+                    corsConfiguration.addAllowedMethod("*");
+                    corsConfiguration.addAllowedHeader("*");
+                    return corsConfiguration;
+                }))
         ;
         return http.build();
     }
