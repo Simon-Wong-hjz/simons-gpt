@@ -33,21 +33,26 @@ const App = () => {
     let API_URL = 'https://simons-gpt.azurewebsites.net';
     // let API_URL = 'http://localhost:8080';
 
+    // eslint-disable-next-line
     const infoMessage = (message) => {
         messageApi.info(message).then();
     };
+
     const successMessage = (message) => {
         messageApi.open({
             type: 'success',
             content: message,
         }).then();
     };
+
     const errorMessage = (message) => {
         messageApi.open({
             type: 'error',
             content: message,
         }).then();
     };
+
+    // eslint-disable-next-line
     const warningMessage = (message) => {
         messageApi.open({
             type: 'warning',
