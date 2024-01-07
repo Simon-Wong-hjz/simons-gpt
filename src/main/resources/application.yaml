@@ -4,8 +4,6 @@ spring:
     username: ${AZURE_SQL_USERNAME}
     password: ${AZURE_SQL_PASSWORD}
     name: simons-gpt
-    pool:
-      max-create-connection-time: 300000
   jackson:
     date-format: yyyy-MM-dd
     serialization:
