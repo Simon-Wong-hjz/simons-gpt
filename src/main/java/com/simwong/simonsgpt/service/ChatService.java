@@ -55,13 +55,13 @@ public class ChatService {
             try {
                 jwt = contextView.get("jwt");
                 userId = jwtTokenService.extractValue(jwt, "userId", Integer.class);
+                return conversationRepository.save(
+                        Conversation.builder()
+                                .userId(userId)
+                                .build());
             } catch (Exception e) {
                 return Mono.error(new UnauthorizedException("未登录", e));
             }
-            return conversationRepository.save(
-                    Conversation.builder()
-                            .userId(userId)
-                            .build());
         });
     }
 
@@ -103,10 +103,10 @@ public class ChatService {
             try {
                 jwt = contextView.get("jwt");
                 userId = jwtTokenService.extractValue(jwt, "userId", Integer.class);
+                return conversationRepository.findByUserId(userId);
             } catch (Exception e) {
                 return Flux.error(new UnauthorizedException("未登录", e));
             }
-            return conversationRepository.findByUserId(userId);
         });
     }
 
@@ -117,16 +117,16 @@ public class ChatService {
             try {
                 jwt = contextView.get("jwt");
                 userId = jwtTokenService.extractValue(jwt, "userId", Integer.class);
+                return conversationRepository.findById(conversationId)
+                        .flatMapMany(conversation -> {
+                            if (!conversation.getUserId().equals(userId)) {
+                                return Flux.error(new UnauthorizedException("未登录"));
+                            }
+                            return messageRepository.findByConversationId(conversationId);
+                        });
             } catch (Exception e) {
                 return Flux.error(new UnauthorizedException("未登录", e));
             }
-            return conversationRepository.findById(conversationId)
-                    .flatMapMany(conversation -> {
-                        if (!conversation.getUserId().equals(userId)) {
-                            return Flux.error(new UnauthorizedException("未登录"));
-                        }
-                        return messageRepository.findByConversationId(conversationId);
-                    });
         });
     }
 
@@ -137,18 +137,18 @@ public class ChatService {
             try {
                 jwt = contextView.get("jwt");
                 userId = jwtTokenService.extractValue(jwt, "userId", Integer.class);
+                return conversationRepository.findById(conversationId)
+                        .flatMap(conversation -> {
+                            if (!conversation.getUserId().equals(userId)) {
+                                return Mono.error(new UnauthorizedException("无权限"));
+                            }
+                            return Mono.empty();
+                        })
+                        .then(messageRepository.deleteByConversationId(conversationId))
+                        .then(conversationRepository.deleteById(conversationId));
             } catch (Exception e) {
                 return Mono.error(new UnauthorizedException("未登录", e));
             }
-            return conversationRepository.findById(conversationId)
-                    .flatMap(conversation -> {
-                        if (!conversation.getUserId().equals(userId)) {
-                            return Mono.error(new UnauthorizedException("无权限"));
-                        }
-                        return Mono.empty();
-                    })
-                    .then(messageRepository.deleteByConversationId(conversationId))
-                    .then(conversationRepository.deleteById(conversationId));
         });
     }
 }
