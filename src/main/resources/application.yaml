@@ -1,9 +1,11 @@
 spring:
   r2dbc:
-    url: r2dbc:pool:mssql://simons-gpt.database.windows.net:1433
+    url: r2dbc:mssql://simons-gpt.database.windows.net:1433
     username: ${AZURE_SQL_USERNAME}
     password: ${AZURE_SQL_PASSWORD}
     name: simons-gpt
+    pool:
+      enabled: false
   jackson:
     date-format: yyyy-MM-dd
     serialization:

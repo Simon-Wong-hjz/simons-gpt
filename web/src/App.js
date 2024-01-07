@@ -7,7 +7,7 @@ import { DeleteOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-desig
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
-const version = 'v1.1.0';
+const version = 'v1.1.1';
 
 const App = () => {
 
@@ -190,6 +190,8 @@ const App = () => {
                     setIsLoading(false);
                 });
         }
+        // make sure the title is updated when the conversation changes
+        fetchConversations().then();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ongoingConversation]);
 
@@ -558,9 +560,9 @@ const App = () => {
                 <p>2. 数据库改用SQL Server，Azure的MySql贵得离谱</p>
                 <p>3. 增加了停止生成的功能，在对话时可以打断GPT的生成</p>
                 <p>4. 重构了前端，用Ant Design更好地支持小屏幕设备</p>
+                <p>5. 解决了数据库闲时自动暂停的问题，钱能解决的问题都不是问题:)</p>
                 <p>已知问题：</p>
-                <p>1. 偶发对话后无法登录，可能是框架问题，目前只能重启服务器解决</p>
-                <p>2. 数据库闲时会自动暂停，会导致无法登录或者保存历史记录，为了节省开支没有什么好办法，只能等个5分钟左右</p>
+                <p>1. 偶发对话后无法登录或者无法获取对话记录的现象，如无意外是框架的bug，目前只能重启服务器解决，遇到了请联系我</p>
             </Modal>
         );
     }
