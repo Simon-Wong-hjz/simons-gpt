@@ -16,3 +16,23 @@
   background-color: #f1f0f0;
   border: 1px solid #f1f0f0;
 }
+
+.largeScreenSider {
+  width: 80% !important; /* Adjust this value for large screens */
+}
+
+.smallScreenSider {
+  width: 80% !important; /* Adjust this value for small screens */
+}
+
+@media screen and (max-width: 768px) {
+  .largeScreenSider {
+    width: 80% !important; /* Width for small screens */
+  }
+}
+
+@media screen and (min-width: 769px) {
+  .smallScreenSider {
+    width: 40% !important; /* Width for large screens */
+  }
+}

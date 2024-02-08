@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ChatRequest {
     private Integer conversationId;
+    private Boolean enabledPromptOptimization;
     @NotNull
     private List<Message> chatMessages;
 }
