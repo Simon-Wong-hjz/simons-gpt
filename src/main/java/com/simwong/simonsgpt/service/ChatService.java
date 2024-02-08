@@ -7,17 +7,23 @@ import com.simwong.simonsgpt.entity.ChatRequest;
 import com.simwong.simonsgpt.entity.UnauthorizedException;
 import com.simwong.simonsgpt.repository.ConversationRepository;
 import com.simwong.simonsgpt.repository.MessageRepository;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -27,25 +33,38 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final JwtTokenService jwtTokenService;
 
+    @Value("${maxTitleLength}")
+    private Integer maxTitleLength;
+    private final String defaultSystemPrompt = loadPromptFromFile("prompts/default.txt");
+    private final String promptOptimizationPrompt = loadPromptFromFile("prompts/prompt-optimization.txt");
+
     public Flux<String> sendMessage(Mono<ChatRequest> chatPostRequestMono) {
         // Use a StringBuilder to collect the streamed data
         StringBuilder completeResponse = new StringBuilder();
-        List<Message> chatMessages = new ArrayList<>();
+        List<Message> messagesToBeSaved = new ArrayList<>();
 
         return chatPostRequestMono
                 .flatMapMany(chatRequest -> {
-                    Integer conversationId = chatRequest.getConversationId();
-                    if (conversationId == null) {
-                        // if the conversation id is null, the user is not login, skip to the invoke of OpenAI
-                        return openAIClient.chat(chatRequest.getChatMessages());
+                    List<Message> requestChatMessages = chatRequest.getChatMessages();
+
+                    // Check if enabledPromptOptimization is true and if the request contains only one message
+                    if (chatRequest.getEnabledPromptOptimization() != null
+                            && chatRequest.getEnabledPromptOptimization()
+                            && requestChatMessages.size() == 1) {
+                        // Make a call with openAIClient.chat() and wait for it to finish
+                        return openAIClient.chat(buildChatMessages(promptOptimizationPrompt, requestChatMessages))
+                                .collectList()
+                                .flatMapMany(strings -> {
+                                    String optimizedPrompt = String.join("", strings);
+                                    requestChatMessages.get(0).setContent(optimizedPrompt);
+                                    return invokeChat(chatRequest, requestChatMessages, messagesToBeSaved);
+                                });
                     }
-                    chatRequest.getChatMessages().forEach(message -> message.setConversationId(conversationId));
-                    chatMessages.addAll(chatRequest.getChatMessages());
-                    return openAIClient.chat(chatRequest.getChatMessages());
+                    return invokeChat(chatRequest, requestChatMessages, messagesToBeSaved);
                 })
                 .doOnNext(completeResponse::append)
                 .publishOn(Schedulers.boundedElastic())
-                .doFinally(signalType -> saveMessage(completeResponse.toString(), chatMessages).subscribe());
+                .doFinally(signalType -> saveMessage(completeResponse.toString(), messagesToBeSaved).subscribe());
     }
 
     public Mono<Conversation> createConversation(ServerWebExchange exchange) {
@@ -80,7 +99,7 @@ public class ChatService {
                 .flatMap(conversation -> {
                     // check if the conversation has title, if not, set the title to the first message
                     if (StringUtils.isBlank(conversation.getTitle())) {
-                        conversation.setTitle(message.getContent());
+                        conversation.setTitle(message.getContent().substring(0, Math.min(message.getContent().length(), maxTitleLength)));
                     }
                     return conversationRepository.updateConversation(conversation)
                             .then(Mono.defer(() -> {
@@ -154,5 +173,35 @@ public class ChatService {
                 return Mono.error(new UnauthorizedException("未登录", e));
             }
         });
+    }
+
+    private String loadPromptFromFile(String filePath) {
+        try {
+            // Assuming the file is located directly under the resources directory
+            Path path = Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource(filePath)).toURI());
+            return Files.readString(path);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load prompt from file", e);
+        }
+    }
+
+    private List<ChatMessage> buildChatMessages(String systemMessage, List<Message> userMessage) {
+        List<ChatMessage> chatMessages = new ArrayList<>();
+        if (systemMessage != null) {
+            chatMessages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemMessage, "Simon"));
+        }
+        userMessage.forEach(message -> chatMessages.add(new ChatMessage(message.getRole(), message.getContent())));
+        return chatMessages;
+    }
+
+    private Flux<String> invokeChat(ChatRequest chatRequest, List<Message> requestChatMessages, List<Message> messagesToBeSaved) {
+        Integer conversationId = chatRequest.getConversationId();
+        if (conversationId == null) {
+            // if the conversation id is null, the user is not login, skip to the invoke of OpenAI
+            return openAIClient.chat(buildChatMessages(defaultSystemPrompt, requestChatMessages));
+        }
+        requestChatMessages.forEach(message -> message.setConversationId(conversationId));
+        messagesToBeSaved.addAll(requestChatMessages);
+        return openAIClient.chat(buildChatMessages(defaultSystemPrompt, requestChatMessages));
     }
 }

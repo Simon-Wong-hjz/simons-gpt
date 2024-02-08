@@ -1,9 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import Modal from './Modal';
-import { Button, Flex, Form, Input, Layout, List, Menu, message, Modal, Space } from 'antd';
+import {
+    Button,
+    Col,
+    Flex,
+    Form,
+    Input,
+    Layout,
+    List,
+    Menu,
+    message,
+    Modal,
+    Popover,
+    Row,
+    Space,
+    Switch
+} from 'antd';
 import Cookies from 'js-cookie';
 import 'antd/dist/reset.css';
-import { DeleteOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import {
+    DeleteOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined, QuestionCircleFilled, QuestionCircleOutlined, QuestionCircleTwoTone,
+    QuestionOutlined,
+    SearchOutlined
+} from "@ant-design/icons";
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -29,6 +50,9 @@ const App = () => {
     // if the window width is less than 576px, the sider will be collapsed by default
     const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
     const messagesEndRef = useRef(null);
+
+    // features
+    const [enabledPromptOptimization, setEnabledPromptOptimization] = useState(false);
 
     let API_URL = 'https://simons-gpt.azurewebsites.net';
     // let API_URL = 'http://localhost:8080';
@@ -113,6 +137,7 @@ const App = () => {
 
             const body = {
                 conversationId: currentConversationId,
+                enabledPromptOptimization: enabledPromptOptimization,
                 chatMessages: ongoingConversation.flatMap(function (message) {
                     return {
                         role: message.role,
@@ -562,7 +587,8 @@ const App = () => {
                 <p>4. 重构了前端，用Ant Design更好地支持小屏幕设备</p>
                 <p>5. 解决了数据库闲时自动暂停的问题，钱能解决的问题都不是问题:)</p>
                 <p>已知问题：</p>
-                <p>1. 偶发对话后无法登录或者无法获取对话记录的现象，如无意外是框架的bug，目前只能重启服务器解决，遇到了请联系我</p>
+                <p>1.
+                    偶发对话后无法登录或者无法获取对话记录的现象，如无意外是框架的bug，目前只能重启服务器解决，遇到了请联系我</p>
             </Modal>
         );
     }
@@ -677,38 +703,87 @@ const App = () => {
                 <Layout>
                     <Content style={{ margin: '24px 16px 0' }}>
                         <div className="chat-area" style={{ padding: 24, background: '#fff' }}>
-                            <div className="message-list">
-                                <List
-                                    style={{ overflowY: 'auto' }}
-                                    itemLayout="horizontal"
-                                    dataSource={ongoingConversation}
-                                    renderItem={item => (
-                                        <List.Item
-                                            style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                            <div
-                                                className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
-                                        </List.Item>
-                                    )}
-                                />
-                            </div>
-                            {/* Invisible element at the end of the messages */}
-                            <div ref={messagesEndRef}/>
-                            <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
-                                <Input.TextArea required
-                                                placeholder="输入你的问题……"
-                                                style={{ width: 'calc(100% - 100px)' }}
-                                                value={inputMessage}
-                                                onChange={handleInputChange}
-                                                onPressEnter={handleKeyPress}
-                                                autoSize/>
-                                {isLoading ? (
-                                    <Button onClick={interruptProcess}>停止生成</Button>
-                                ) : (
-                                    <Button type="primary" onClick={sendMessage} disabled={!inputMessage.trim()}>
-                                        发送
-                                    </Button>
-                                )}
-                            </Space.Compact>
+                            {/* message area*/}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <div className="message-list">
+                                        <List
+                                            style={{ overflowY: 'auto' }}
+                                            itemLayout="horizontal"
+                                            dataSource={ongoingConversation}
+                                            renderItem={item => (
+                                                <List.Item
+                                                    style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                                    <div
+                                                        className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
+                                                </List.Item>
+                                            )}
+                                        />
+                                    </div>
+                                    {/* Invisible element at the end of the messages */}
+                                    <div ref={messagesEndRef}/>
+                                </Col>
+                            </Row>
+                            {/* feature selecting area */}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <Popover
+                                        trigger="click"
+                                        title={"测试功能，可能不稳定"}
+                                        content={
+                                            <div>
+                                                开启提示词优化后，后台会要求模型将你的输入进行扩充，以提供更多的上下文和更明确的指示，
+                                                并用扩充后的文本替换你的原始输入；预期的回答质量会提高，但耗时会增加。<br/><br/>
+                                                <b>注意：</b><br/>
+                                                1. 开启这个功能会极大增加生成的文本量；<br/>
+                                                2. 如果刷新后重新进入这段对话，你的首次输入会被替换成扩充后的提示词。
+                                            </div>
+                                        }
+                                    >
+                                        {<QuestionCircleTwoTone/>}
+                                    </Popover>
+                                    <span>提示词优化：</span>
+                                    <Switch onChange={setEnabledPromptOptimization} checkedChildren="开启"
+                                            unCheckedChildren="关闭"></Switch>
+                                </Col>
+                            </Row>
+                            {/* input area*/}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
+                                        <Input.TextArea required
+                                                        placeholder="输入你的问题……"
+                                                        style={{ width: 'calc(100% - 100px)' }}
+                                                        value={inputMessage}
+                                                        onChange={handleInputChange}
+                                                        onPressEnter={handleKeyPress}
+                                                        autoSize/>
+                                        {isLoading ? (
+                                            <Button onClick={interruptProcess}>停止生成</Button>
+                                        ) : (
+                                            <Button type="primary" onClick={sendMessage}
+                                                    disabled={!inputMessage.trim()}>
+                                                发送
+                                            </Button>
+                                        )}
+                                    </Space.Compact>
+                                </Col>
+                            </Row>
                         </div>
                     </Content>
                 </Layout>

@@ -30,6 +30,10 @@ openai:
   # set the key from Azure Web Apps configuration
   key: ${OPENAI_KEY}
   retry: 3
+  socketTimeout: 10000
+  connectTimeout: 5000
 
 jwt:
   expiration: 86400000
+
+maxTitleLength: 50
