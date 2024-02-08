@@ -21,9 +21,8 @@ import 'antd/dist/reset.css';
 import {
     DeleteOutlined,
     MenuFoldOutlined,
-    MenuUnfoldOutlined, QuestionCircleFilled, QuestionCircleOutlined, QuestionCircleTwoTone,
-    QuestionOutlined,
-    SearchOutlined
+    MenuUnfoldOutlined,
+    QuestionCircleTwoTone
 } from "@ant-design/icons";
 import './App.css';
 
