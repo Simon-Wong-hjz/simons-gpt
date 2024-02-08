@@ -28,7 +28,8 @@ import {
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
-const version = 'v1.1.1';
+const version = 'v1.2.0';
+const updateDate = '2024-02-08';
 
 const App = () => {
 
@@ -580,15 +581,17 @@ const App = () => {
                 // Allow the user to close the modal by clicking on the mask (outside the modal)
                 maskClosable={true}
             >
+                <p><i>{updateDate}</i></p>
                 <p>版本更新说明：{version}</p>
-                <p>1. 支持了用户注册和登录，登录后可以保存对话记录，并且可以随时继续之前的对话</p>
-                <p>2. 数据库改用SQL Server，Azure的MySql贵得离谱</p>
-                <p>3. 增加了停止生成的功能，在对话时可以打断GPT的生成</p>
-                <p>4. 重构了前端，用Ant Design更好地支持小屏幕设备</p>
-                <p>5. 解决了数据库闲时自动暂停的问题，钱能解决的问题都不是问题:)</p>
-                <p>已知问题：</p>
-                <p>1.
-                    偶发对话后无法登录或者无法获取对话记录的现象，如无意外是框架的bug，目前只能重启服务器解决，遇到了请联系我</p>
+                <p>1. 新增提示词优化功能，打开后会单独调用一次模型优化提示词，
+                    然后再用优化过的提示词开启对话，应该可以极大提升提示词比较简单时的生成效果</p>
+                <p>2. 优化了导航菜单的布局</p>
+                <p>3. 修复了一些小bug</p>
+                <p>Todo list：</p>
+                <p>1. 集成Assistant接口，更好地支持专项领域的需求</p>
+                <p>2. 给项目写个readme</p>
+                <p>3. 目前生成文本时会不断调用后台接口，需要加防抖</p>
+                <p>4. 重构前端代码</p>
             </Modal>
         );
     }
