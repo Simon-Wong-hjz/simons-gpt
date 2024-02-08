@@ -67,7 +67,11 @@ public class ChatService {
 
     public Mono<Message> saveMessage(String assistantMessage, List<Message> chatMessages) {
         // Save the last message in the list, which is the message we just received
-        Message message = chatMessages.get(chatMessages.size() - 1);
+        int lastIndex = chatMessages.size() - 1;
+        if (lastIndex < 0) {
+            lastIndex = 0;
+        }
+        Message message = chatMessages.get(lastIndex);
         if (message.getConversationId() == null) {
             // if the conversation id is null, the user is not login, no need to save the message
             return Mono.empty();
