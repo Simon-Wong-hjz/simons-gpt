@@ -608,39 +608,66 @@ const App = () => {
 
 
     const NavigationMenu = ({ conversations, onSelectConversation }) => {
-        if (!isAuthenticated) {
-            return (
-                <Menu theme={"dark"} mode="inline">
-                    <Flex style={{ padding: '10px' }} gap="middle" vertical>
-                        <Button type="primary" block onClick={newConversation}>
-                            开启新对话
-                        </Button>
-                    </Flex>
-                </Menu>
-            );
-        }
-
         return (
             <Menu theme={"dark"} mode="inline">
-                <Flex style={{ padding: '10px' }} gap="middle" vertical>
-                    <Button type="primary" block onClick={newConversation}>
-                        新对话
-                    </Button>
-                    {conversations?.map(conversation => (
-                        <Menu.Item key={conversation.conversationId}
-                                   onClick={() => onSelectConversation(conversation.conversationId)}>
-                            <Space>
-                                {conversation.title || `Conversation ${conversation.conversationId}`}
-                                <Button shape="circle"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            modalDeleteConversation(conversation.conversationId);
-                                        }}/>
-                            </Space>
-                        </Menu.Item>
-                    ))}
-                </Flex>
+                <div style={{ padding: '0 16px' }}>
+                    <Row gutter={{
+                        xs: 8,
+                        sm: 16,
+                        md: 24,
+                        lg: 32,
+                    }}>
+                        <Col span={24}>
+                            <Flex style={{ padding: '10px' }} gap="middle" vertical>
+                                <Button type="primary" block onClick={newConversation}>
+                                    开启新对话
+                                </Button>
+                            </Flex>
+                        </Col>
+                    </Row>
+                    <Row gutter={{
+                        xs: 8,
+                        sm: 16,
+                        md: 24,
+                        lg: 32,
+                    }}>
+                        <Col span={24}>
+                            {isAuthenticated ?
+                                conversations?.map(conversation => (
+                                    <Menu.Item key={conversation.conversationId}
+                                               onClick={() => onSelectConversation(conversation.conversationId)}
+                                               style={{
+                                                   whiteSpace: 'nowrap',
+                                                   overflow: 'hidden',
+                                                   textOverflow: 'ellipsis'
+                                               }}
+                                    >
+                                        <Row align="middle">
+                                            <Col flex="auto" style={{
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                maxWidth: 'calc(100% - 40px)'
+
+                                            }}>
+                                                {conversation.title || `Conversation ${conversation.conversationId}`}
+                                            </Col>
+                                            <Col flex="none">
+                                                <Button shape="circle"
+                                                        icon={<DeleteOutlined/>}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            modalDeleteConversation(conversation.conversationId);
+                                                        }}/>
+                                            </Col>
+                                        </Row>
+                                    </Menu.Item>
+                                ))
+                                : null
+                            }
+                        </Col>
+                    </Row>
+                </div>
             </Menu>
         );
     };
@@ -652,18 +679,20 @@ const App = () => {
             <LoginModal/>
             <LogoutModal/>
             <UpdateModal/>
-            <Sider collapsible
-                   trigger={null}
-                   collapsed={siderCollapsed}
-                   collapsedWidth="0"
-                   style={{
-                       overflow: 'auto',
-                       height: '100vh',
-                       position: 'sticky',
-                       left: 0,
-                       top: 0,
-                       bottom: 0,
-                   }}>
+            <Sider
+                width={window.innerWidth < 768 ? "80%" : "30%"}
+                collapsible
+                trigger={null}
+                collapsed={siderCollapsed}
+                collapsedWidth="0"
+                style={{
+                    overflow: 'auto',
+                    height: '100vh',
+                    position: 'sticky',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                }}>
                 <NavigationMenu
                     conversations={conversations}
                     onSelectConversation={(conversationId) => switchConversation(conversationId)}
