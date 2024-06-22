@@ -1,13 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import Modal from './Modal';
-import { Button, Flex, Form, Input, Layout, List, Menu, message, Modal, Space } from 'antd';
+import {
+    Button,
+    Col,
+    Flex,
+    Form,
+    Input,
+    Layout,
+    List,
+    Menu,
+    message,
+    Modal,
+    Popover,
+    Row,
+    Space,
+    Switch
+} from 'antd';
 import Cookies from 'js-cookie';
 import 'antd/dist/reset.css';
-import { DeleteOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import {
+    DeleteOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    QuestionCircleTwoTone
+} from "@ant-design/icons";
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
 const version = 'v1.2.0';
+const updateDate = '2024-06-22';
 
 const App = () => {
 
@@ -29,6 +50,10 @@ const App = () => {
     // if the window width is less than 576px, the sider will be collapsed by default
     const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
     const messagesEndRef = useRef(null);
+
+
+    // features
+    const [enabledPromptOptimization, setEnabledPromptOptimization] = useState(false);
 
     let API_URL = 'https://47.115.52.56/gpt';
     // let API_URL = 'http://localhost:8080';
@@ -113,6 +138,7 @@ const App = () => {
 
             const body = {
                 conversationId: currentConversationId,
+                enabledPromptOptimization: enabledPromptOptimization,
                 chatMessages: ongoingConversation.flatMap(function (message) {
                     return {
                         role: message.role,
@@ -555,10 +581,17 @@ const App = () => {
                 // Allow the user to close the modal by clicking on the mask (outside the modal)
                 maskClosable={true}
             >
+                <p><i>{updateDate}</i></p>
                 <p>版本更新说明：{version}</p>
                 <p>1. 改用了阿里云国内的服务器，响应速度会比之前慢一点</p>
                 <p>2. 模型改用gpt-4o，回答质量更高，生成速度会比之前快一点</p>
                 <p>3. 改用服务器本地的MySQL数据库</p>
+                <p>Todo list：</p>
+                <p>1. 集成Assistant接口，更好地支持专项领域的需求</p>
+                <p>2. 给项目写个readme</p>
+                <p>3. 目前生成文本时会不断调用后台接口，需要加防抖</p>
+                <p>4. 重构前端代码</p>
+                <p>5. 支持markdown渲染</p>
             </Modal>
         );
     }
@@ -578,39 +611,66 @@ const App = () => {
 
 
     const NavigationMenu = ({ conversations, onSelectConversation }) => {
-        if (!isAuthenticated) {
-            return (
-                <Menu theme={"dark"} mode="inline">
-                    <Flex style={{ padding: '10px' }} gap="middle" vertical>
-                        <Button type="primary" block onClick={newConversation}>
-                            开启新对话
-                        </Button>
-                    </Flex>
-                </Menu>
-            );
-        }
-
         return (
             <Menu theme={"dark"} mode="inline">
-                <Flex style={{ padding: '10px' }} gap="middle" vertical>
-                    <Button type="primary" block onClick={newConversation}>
-                        新对话
-                    </Button>
-                    {conversations?.map(conversation => (
-                        <Menu.Item key={conversation.conversationId}
-                                   onClick={() => onSelectConversation(conversation.conversationId)}>
-                            <Space>
-                                {conversation.title || `Conversation ${conversation.conversationId}`}
-                                <Button shape="circle"
-                                        icon={<DeleteOutlined/>}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            modalDeleteConversation(conversation.conversationId);
-                                        }}/>
-                            </Space>
-                        </Menu.Item>
-                    ))}
-                </Flex>
+                <div style={{ padding: '0 16px' }}>
+                    <Row gutter={{
+                        xs: 8,
+                        sm: 16,
+                        md: 24,
+                        lg: 32,
+                    }}>
+                        <Col span={24}>
+                            <Flex style={{ padding: '10px' }} gap="middle" vertical>
+                                <Button type="primary" block onClick={newConversation}>
+                                    开启新对话
+                                </Button>
+                            </Flex>
+                        </Col>
+                    </Row>
+                    <Row gutter={{
+                        xs: 8,
+                        sm: 16,
+                        md: 24,
+                        lg: 32,
+                    }}>
+                        <Col span={24}>
+                            {isAuthenticated ?
+                                conversations?.map(conversation => (
+                                    <Menu.Item key={conversation.conversationId}
+                                               onClick={() => onSelectConversation(conversation.conversationId)}
+                                               style={{
+                                                   whiteSpace: 'nowrap',
+                                                   overflow: 'hidden',
+                                                   textOverflow: 'ellipsis'
+                                               }}
+                                    >
+                                        <Row align="middle">
+                                            <Col flex="auto" style={{
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                maxWidth: 'calc(100% - 40px)'
+
+                                            }}>
+                                                {conversation.title || `Conversation ${conversation.conversationId}`}
+                                            </Col>
+                                            <Col flex="none">
+                                                <Button shape="circle"
+                                                        icon={<DeleteOutlined/>}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            modalDeleteConversation(conversation.conversationId);
+                                                        }}/>
+                                            </Col>
+                                        </Row>
+                                    </Menu.Item>
+                                ))
+                                : null
+                            }
+                        </Col>
+                    </Row>
+                </div>
             </Menu>
         );
     };
@@ -622,18 +682,20 @@ const App = () => {
             <LoginModal/>
             <LogoutModal/>
             <UpdateModal/>
-            <Sider collapsible
-                   trigger={null}
-                   collapsed={siderCollapsed}
-                   collapsedWidth="0"
-                   style={{
-                       overflow: 'auto',
-                       height: '100vh',
-                       position: 'sticky',
-                       left: 0,
-                       top: 0,
-                       bottom: 0,
-                   }}>
+            <Sider
+                width={window.innerWidth < 768 ? "80%" : "30%"}
+                collapsible
+                trigger={null}
+                collapsed={siderCollapsed}
+                collapsedWidth="0"
+                style={{
+                    overflow: 'auto',
+                    height: '100vh',
+                    position: 'sticky',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                }}>
                 <NavigationMenu
                     conversations={conversations}
                     onSelectConversation={(conversationId) => switchConversation(conversationId)}
@@ -673,38 +735,88 @@ const App = () => {
                 <Layout>
                     <Content style={{ margin: '24px 16px 0' }}>
                         <div className="chat-area" style={{ padding: 24, background: '#fff' }}>
-                            <div className="message-list">
-                                <List
-                                    style={{ overflowY: 'auto' }}
-                                    itemLayout="horizontal"
-                                    dataSource={ongoingConversation}
-                                    renderItem={item => (
-                                        <List.Item
-                                            style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                            <div
-                                                className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
-                                        </List.Item>
-                                    )}
-                                />
-                            </div>
-                            {/* Invisible element at the end of the messages */}
-                            <div ref={messagesEndRef}/>
-                            <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
-                                <Input.TextArea required
-                                                placeholder="输入你的问题……"
-                                                style={{ width: 'calc(100% - 100px)' }}
-                                                value={inputMessage}
-                                                onChange={handleInputChange}
-                                                onPressEnter={handleKeyPress}
-                                                autoSize/>
-                                {isLoading ? (
-                                    <Button onClick={interruptProcess}>停止生成</Button>
-                                ) : (
-                                    <Button type="primary" onClick={sendMessage} disabled={!inputMessage.trim()}>
-                                        发送
-                                    </Button>
-                                )}
-                            </Space.Compact>
+                            {/* message area*/}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <div className="message-list">
+                                        <List
+                                            style={{ overflowY: 'auto' }}
+                                            itemLayout="horizontal"
+                                            dataSource={ongoingConversation}
+                                            renderItem={item => (
+                                                <List.Item
+                                                    style={{ justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                                    <div
+                                                        className={`message ${item.role}`}>{item.content.replaceAll(/\n\n(?!\n)/g, '')}</div>
+                                                </List.Item>
+                                            )}
+                                        />
+                                    </div>
+                                    {/* Invisible element at the end of the messages */}
+                                    <div ref={messagesEndRef}/>
+                                </Col>
+                            </Row>
+                            {/* feature selecting area */}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <Popover
+                                        trigger="click"
+                                        title={"测试功能，可能不稳定"}
+                                        content={
+                                            <div>
+                                                开启提示词优化后，后台会要求模型将你的输入进行扩充，以提供更多的上下文和更明确的指示，
+                                                并用扩充后的文本替换你的原始输入；预期的回答质量会提高，但耗时会增加。<br/><br/>
+                                                <b>注意：</b><br/>
+                                                1. 该功能仅在新对话的首次输入时生效；<br/>
+                                                2. 开启这个功能会极大增加生成的文本量；<br/>
+                                                3. 如果刷新后重新进入这段对话，你的首次输入会被替换成扩充后的提示词。
+                                            </div>
+                                        }
+                                    >
+                                        {<QuestionCircleTwoTone/>}
+                                    </Popover>
+                                    <span>提示词优化：</span>
+                                    <Switch onChange={setEnabledPromptOptimization} checkedChildren="开启"
+                                            unCheckedChildren="关闭"></Switch>
+                                </Col>
+                            </Row>
+                            {/* input area*/}
+                            <Row gutter={{
+                                xs: 8,
+                                sm: 16,
+                                md: 24,
+                                lg: 32,
+                            }}>
+                                <Col span={24}>
+                                    <Space.Compact style={{ paddingTop: '10px', width: '100%' }} align="start">
+                                        <Input.TextArea required
+                                                        placeholder="输入你的问题……"
+                                                        style={{ width: 'calc(100% - 100px)' }}
+                                                        value={inputMessage}
+                                                        onChange={handleInputChange}
+                                                        onPressEnter={handleKeyPress}
+                                                        autoSize/>
+                                        {isLoading ? (
+                                            <Button onClick={interruptProcess}>停止生成</Button>
+                                        ) : (
+                                            <Button type="primary" onClick={sendMessage}
+                                                    disabled={!inputMessage.trim()}>
+                                                发送
+                                            </Button>
+                                        )}
+                                    </Space.Compact>
+                                </Col>
+                            </Row>
                         </div>
                     </Content>
                 </Layout>

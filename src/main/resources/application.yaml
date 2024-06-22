@@ -29,6 +29,10 @@ openai:
   endpoint: "https://openai-proxy-openai-proxy-tfbdvcgwxp.us-west-1.fcapp.run/v1"
   key: ${OPENAI_KEY}
   retry: 3
+  socketTimeout: 10000
+  connectTimeout: 5000
 
 jwt:
   expiration: 86400000
+
+maxTitleLength: 50
