@@ -55,7 +55,7 @@ jobs:
           SOURCE: "*.jar"
           REMOTE_HOST: ${{ secrets.ALIYUN_REMOTE_HOST }}
           REMOTE_USER: ecs-user
-          TARGET: "/home/ecs-user/simons-gpt"
+          TARGET: "/home/ecs-user/simons-gpt/"
           SCRIPT_BEFORE: |
             systemctl --user stop simons-gpt.service
           SCRIPT_AFTER: |
