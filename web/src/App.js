@@ -28,7 +28,7 @@ import './App.css';
 
 const { Header, Content, Sider } = Layout;
 const version = 'v1.2.0';
-const updateDate = '2024-02-08';
+const updateDate = '2024-06-22';
 
 const App = () => {
 
@@ -51,10 +51,11 @@ const App = () => {
     const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
     const messagesEndRef = useRef(null);
 
+
     // features
     const [enabledPromptOptimization, setEnabledPromptOptimization] = useState(false);
 
-    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    let API_URL = 'https://47.115.52.56/gpt';
     // let API_URL = 'http://localhost:8080';
 
     // eslint-disable-next-line
@@ -582,10 +583,9 @@ const App = () => {
             >
                 <p><i>{updateDate}</i></p>
                 <p>版本更新说明：{version}</p>
-                <p>1. 新增提示词优化功能，打开后会单独调用一次模型优化提示词，
-                    然后再用优化过的提示词开启对话，应该可以极大提升提示词比较简单时的生成效果</p>
-                <p>2. 优化了导航菜单的布局</p>
-                <p>3. 修复了一些小bug</p>
+                <p>1. 改用了阿里云国内的服务器，响应速度会比之前慢一点</p>
+                <p>2. 模型改用gpt-4o，回答质量更高，生成速度会比之前快一点</p>
+                <p>3. 改用服务器本地的MySQL数据库</p>
                 <p>Todo list：</p>
                 <p>1. 集成Assistant接口，更好地支持专项领域的需求</p>
                 <p>2. 给项目写个readme</p>

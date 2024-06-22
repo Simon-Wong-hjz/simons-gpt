@@ -1,8 +1,8 @@
 spring:
   r2dbc:
-    url: r2dbc:mssql://127.0.0.1:1433
-    username: ${LOCAL_SQL_USERNAME}
-    password: ${LOCAL_SQL_PASSWORD}
+    url: r2dbc:mysql://localhost:3306/simons-gpt?serverTimezone=GMT%2B8&characterEncoding=UTF-8
+    username: ${LOCAL_MYSQL_USERNAME}
+    password: ${LOCAL_MYSQL_PASSWORD}
     pool:
       enabled: false
 

@@ -20,7 +20,15 @@ public class Message {
     private Integer conversationId;
     private String role;
     private String content;
-    private Boolean isDeleted;
+    private Byte isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime deletedAt;
+
+    public Boolean getIsDeleted() {
+        return isDeleted != null && isDeleted == 1;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted ? (byte) 1 : (byte) 0;
+    }
 }

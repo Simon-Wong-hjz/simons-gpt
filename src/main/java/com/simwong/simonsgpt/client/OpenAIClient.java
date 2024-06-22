@@ -106,7 +106,7 @@ public class OpenAIClient {
 
     public Flux<String> chat(@NotNull List<ChatMessage> chatMessages) {
         ChatCompletionRequest chatRequest = ChatCompletionRequest.builder()
-                .model("gpt-4-1106-preview")
+                .model("gpt-4o")
                 .stream(true)
                 .messages(chatMessages)
                 .build();
