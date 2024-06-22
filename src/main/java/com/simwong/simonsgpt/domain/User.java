@@ -23,10 +23,18 @@ public class User {
     private String mobileNumber;
     @Column("password_hash")
     private String password;
-    private Boolean isDeleted;
+    private Byte isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+
+    public Boolean getIsDeleted() {
+        return isDeleted != null && isDeleted == 1;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted ? (byte) 1 : (byte) 0;
+    }
 
     public UserDTO toDTO() {
         return UserDTO.builder()

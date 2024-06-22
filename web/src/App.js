@@ -7,7 +7,7 @@ import { DeleteOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-desig
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
-const version = 'v1.1.1';
+const version = 'v1.2.0';
 
 const App = () => {
 
@@ -30,7 +30,7 @@ const App = () => {
     const [siderCollapsed, setSiderCollapsed] = useState(window.innerWidth < 576);
     const messagesEndRef = useRef(null);
 
-    let API_URL = 'https://simons-gpt.azurewebsites.net';
+    let API_URL = 'https://47.115.52.56/gpt';
     // let API_URL = 'http://localhost:8080';
 
     // eslint-disable-next-line
@@ -556,13 +556,9 @@ const App = () => {
                 maskClosable={true}
             >
                 <p>版本更新说明：{version}</p>
-                <p>1. 支持了用户注册和登录，登录后可以保存对话记录，并且可以随时继续之前的对话</p>
-                <p>2. 数据库改用SQL Server，Azure的MySql贵得离谱</p>
-                <p>3. 增加了停止生成的功能，在对话时可以打断GPT的生成</p>
-                <p>4. 重构了前端，用Ant Design更好地支持小屏幕设备</p>
-                <p>5. 解决了数据库闲时自动暂停的问题，钱能解决的问题都不是问题:)</p>
-                <p>已知问题：</p>
-                <p>1. 偶发对话后无法登录或者无法获取对话记录的现象，如无意外是框架的bug，目前只能重启服务器解决，遇到了请联系我</p>
+                <p>1. 改用了阿里云国内的服务器，响应速度会比之前慢一点</p>
+                <p>2. 模型改用gpt-4o，回答质量更高，生成速度会比之前快一点</p>
+                <p>3. 改用服务器本地的MySQL数据库</p>
             </Modal>
         );
     }

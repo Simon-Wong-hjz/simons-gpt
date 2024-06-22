@@ -19,8 +19,16 @@ public class Conversation {
     private Integer conversationId;
     private Integer userId;
     private String title;
-    private Boolean isDeleted;
+    private Byte isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+
+    public Boolean getIsDeleted() {
+        return isDeleted != null && isDeleted == 1;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted ? (byte) 1 : (byte) 0;
+    }
 }
