@@ -55,7 +55,7 @@ const App = () => {
     // features
     const [enabledPromptOptimization, setEnabledPromptOptimization] = useState(false);
 
-    let API_URL = 'https://47.115.52.56/gpt';
+    let API_URL = 'http://47.115.52.56/gpt';
     // let API_URL = 'http://localhost:8080';
 
     // eslint-disable-next-line
