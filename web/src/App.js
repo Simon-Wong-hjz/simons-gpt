@@ -27,8 +27,8 @@ import {
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
-const version = 'v1.2.0';
-const updateDate = '2024-06-22';
+const version = 'v1.2.1';
+const updateDate = '2024-11-09';
 
 const App = () => {
 
@@ -583,15 +583,8 @@ const App = () => {
             >
                 <p><i>{updateDate}</i></p>
                 <p>版本更新说明：{version}</p>
-                <p>1. 改用了阿里云国内的服务器，响应速度会比之前慢一点</p>
-                <p>2. 模型改用gpt-4o，回答质量更高，生成速度会比之前快一点</p>
-                <p>3. 改用服务器本地的MySQL数据库</p>
-                <p>Todo list：</p>
-                <p>1. 集成Assistant接口，更好地支持专项领域的需求</p>
-                <p>2. 给项目写个readme</p>
-                <p>3. 目前生成文本时会不断调用后台接口，需要加防抖</p>
-                <p>4. 重构前端代码</p>
-                <p>5. 支持markdown渲染</p>
+                <p>本地址后续将停用</p>
+                <p>请移步 http://47.115.52.56:8094/ 体验新版本</p>
             </Modal>
         );
     }
